@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { Link } from "expo-router";
-
+import '../../global.css';
+ 
 export default function Index() {
   return (
     <View
@@ -10,11 +11,11 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text className="font-bold text-lg my-10 text-gray-800">
+      <Text>
         Welcome to JARSafari!
       </Text>
       <Text>Explore the app</Text>
-     <Link href="/sign-in">Sign In</Link>
+     <Link href="/(auth)/login">Sign In</Link>
      <Link href="/explore">Explore</Link>
      <Link href="/profile">Profile</Link>
      <Link href="/properties/1">Property</Link>
