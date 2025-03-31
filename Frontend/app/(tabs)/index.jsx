@@ -1,24 +1,31 @@
-import { Text, View } from "react-native";
+import { Text, View, Image, TouchableOpacity } from "react-native";
 import { Link } from "expo-router";
-import '../../global.css';
- 
-export default function Index() {
+import React from "react";
+import "../../global.css"
+export default function LandingPage() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>
-        Welcome to JARSafari!
+    <View className="flex-1 justify-center items-center px-6 bg-white">
+      {/* Jarsafari Logo */}
+      <Image
+        source={require("../../assets/images/logo.png")}
+        className="w-52 h-52 mb-6"
+        
+      />
+      {/* Welcome Text */}
+      <Text className="text-4xl font-extrabold text-gray-900 text-center mb-4">
+        Welcome to Jarsafari
       </Text>
-      <Text>Explore the app</Text>
-     <Link href="/(auth)/login">Sign In</Link>
-     <Link href="/explore">Explore</Link>
-     <Link href="/profile">Profile</Link>
-     <Link href="/properties/1">Property</Link>
+      <Text className="text-lg text-gray-500 text-center mb-8 px-4">
+        Explore new destinations
+      </Text>
+      {/* Start Journey Button */}
+      <TouchableOpacity className="w-11/12 bg-purple-500 py-4 rounded-2xl shadow-lg shadow-gray-300">
+        <Link href="/login" >
+        <Text className="text-white text-center text-2xl font-semibold">
+          Start Your Journey
+          </Text>
+        </Link>
+      </TouchableOpacity>
     </View>
   );
 }
