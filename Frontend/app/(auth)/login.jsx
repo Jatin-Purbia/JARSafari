@@ -62,14 +62,12 @@ export default function LoginScreen() {
 
         {/* Continue Button */}
         <TouchableOpacity
-          className={`w-full py-4 rounded-3xl ${
-            isEmailValid ? "bg-purple-500" : "bg-gray-300"
-          }`}
+          className={"w-full py-4 rounded-3xl bg-yellow-400" }
           disabled={!isEmailValid || password.trim() === ""} // Disable if email is invalid or password is empty
           onPress={handleContinue} // Call handleContinue on press
         >
           <Link href="/login-pass">
-            <Text className="text-white text-center font-semibold">
+            <Text className="text-black text-center font-semibold">
               Continue
             </Text>
           </Link>
