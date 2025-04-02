@@ -1,9 +1,15 @@
-const http = require("http");
 const app = require("./app");
-const port = process.env.PORT || 3000;
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
 
-const server = http.createServer(app);
+const connectDB = require("./config/database");
 
-server.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+//config dotenv
+dotenv.config({path: "backend/config/config.env"});
+
+//connect to database
+connectDB();
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`Server is running on http://localhost:${process.env.PORT || 3000}`);
 });
