@@ -12,7 +12,7 @@ export default function LandingPage() {
       />
       {/* Welcome Text */}
       <Text className="text-4xl font-extrabold text-gray-900 text-center mb-4">
-        Welcome to Jarsafari
+        Welcome to JARSafari
       </Text>
       <Text className="text-lg text-gray-500 text-center mb-8 px-4">
         Explore new destinations

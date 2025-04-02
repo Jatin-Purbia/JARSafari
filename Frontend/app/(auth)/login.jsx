@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity , Image} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link ,useRouter} from "expo-router";
 import { useState  } from "react";
@@ -82,11 +82,14 @@ export default function LoginScreen() {
 
         {/* Continue with Google Button */}
         <TouchableOpacity className="w-full flex-row items-center p-4 border border-gray-300 rounded-3xl">
-          <FontAwesome name="google" size={20} className="mr-3" />
-          <Text className="text-center flex-1 font-semibold">
-            Continue With Google
-          </Text>
-        </TouchableOpacity>
+  <Image
+    source={require("../../assets/images/google_logo.png")} // Path to your Google logo image
+    style={{ width: 20, height: 20, marginRight: 12 }}
+  />
+  <Text className="text-center flex-1 font-semibold">
+    Continue With Google
+  </Text>
+</TouchableOpacity>
         <Text className="mt-6 text-gray-600 text-center">
   Don't have an account?{" "}
   <Link href="/create-account" className="font-bold text-black">
