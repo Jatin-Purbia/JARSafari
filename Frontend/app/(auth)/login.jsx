@@ -14,7 +14,7 @@ export default function LoginScreen() {
   const handleContinue = () => {
     if (isEmailValid && password.trim() !== "") {
       // Navigate to the next page if both fields are valid
-      router.push("/login-pass");
+      router.push("/Homepage");
     }else{
       alert("Please enter a valid email and password.");
     }
@@ -28,7 +28,7 @@ export default function LoginScreen() {
         {/* Email Input Field (Using VerifyEmail) */}
         <VerifyEmail onValidEmail={setIsEmailValid} />
 
-        <View classNmae="relative">
+        <View className="relative">
         {/* Password Input Field */}
         <TextInput
           placeholder="Password"
@@ -66,11 +66,9 @@ export default function LoginScreen() {
           disabled={!isEmailValid || password.trim() === ""} // Disable if email is invalid or password is empty
           onPress={handleContinue} // Call handleContinue on press
         >
-          <Link href="/login-pass">
             <Text className="text-black text-center font-semibold">
               Continue
             </Text>
-          </Link>
         </TouchableOpacity>
 
         {/* OR Option */}

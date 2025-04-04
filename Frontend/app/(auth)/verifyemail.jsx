@@ -1,21 +1,23 @@
 import React, { useState } from "react";
 import { View, TextInput, Text } from "react-native";
 
-const EmailInput = () => {
+const EmailInput = ({ onValidEmail }) => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   // Function to validate email
   const validateEmail = (inputEmail) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Standard email format
+    setEmail(inputEmail);
+
     if (!emailRegex.test(inputEmail)) {
       setError("Invalid email address");
+      onValidEmail(false); // Notify parent that email is invalid
     } else {
-      setError("");  // No error if email is valid
+      setError("");
+      onValidEmail(true);  // Notify parent that email is valid ✅
     }
-    setEmail(inputEmail);
   };
-
   return (
     <View className="w-full mb-4">
       {/* Email Input Field */}
@@ -33,5 +35,4 @@ const EmailInput = () => {
     </View>
   );
 };
-
 export default EmailInput;

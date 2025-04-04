@@ -85,11 +85,11 @@ export default function CreateAccountScreen() {
 
         {/* Already Have an Account Section */}
         <Text className="mt-6 text-gray-600 text-center">
-          Already have an account?{" "}
-          <Link href="/login" className="font-bold text-black">
-            Login
-          </Link>
-        </Text>
+  Already have an account?{" "}
+  <Link href="/login">
+    <Text className="font-bold text-black">Login</Text>
+  </Link>
+</Text>
       </View>
     </SafeAreaView>
   );
