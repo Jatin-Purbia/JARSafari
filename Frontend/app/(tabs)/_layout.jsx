@@ -5,24 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 import SearchIcon from "../../assets/images/Icon.png"; // Import your custom icon
 const TabIcon = ({ name, focused, title , customIcon }) => {
   return (
-    <View className="flex-1 mt-2 items-center justify-center height: 40">
-      {customIcon ? (
-        <Image
-          source={customIcon}
-          style={{
-            width: 36,
-            height: 36,
-            tintColor: focused ? "#FFC107" : "#000",
-            resizeMode: "contain",
-          }}
-        />
-      ) : (
-        <Ionicons
-          name={focused ? name : `${name}-outline`}
-          size={22}
-          color={focused ? "#FFC107" : "#000"}
-        />
-      )}
+    <View className="flex-1 mt-2 items-center justify-center">
+      <Ionicons
+        name={focused ? name : `${name}-outline`}
+        size={22}
+        color={focused ? "#FFC107" : "black"}
+      />
       <Text className={`text-xs mt-2 ${focused ? "text-[#FFC107]" : "text-[black]"}`}>
         {title}
       </Text>
@@ -45,6 +33,8 @@ const TabsLayout = () => {
           backgroundColor: "#fff",
           borderTopColor: "#0061FF1A",
           borderTopWidth: 1,
+          paddingBottom: 10,
+          paddingTop: 10,
         },
       }}
     >
