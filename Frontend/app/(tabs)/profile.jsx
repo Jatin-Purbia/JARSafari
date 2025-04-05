@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker"; // To pick images
 import { Ionicons } from "@expo/vector-icons"; // Icons for UI
-
+import { useRouter } from "expo-router"; // For navigation
 
 const getColorForLetter = (letter) => {
   const colors = [
@@ -18,6 +18,7 @@ const ProfileScreen = () => {
   const userName = "Jatin"; // Replace with actual user name from backend
   const userInitial = userName.charAt(0).toUpperCase();
   const bgColor = getColorForLetter(userInitial); // Get unique color for user
+  const router = useRouter(); // For navigation
 
   // Function to pick image from gallery
   const pickImage = async () => {
@@ -55,18 +56,26 @@ const ProfileScreen = () => {
             </View>
           )}
         </TouchableOpacity>
-        <Text className="mt-3 text-lg font-semibold">{userName}</Text>
+        <Text className="mt-3 text-2xl font-semibold">{userName}</Text>
       </View>
 
       {/* Profile Menu */}
-      <View className="mt-6 border-t border-gray-200">
+      <View className="mt-16 border-t border-gray-200">
         <MenuItem icon="calendar-outline" title="My Journey" />
         <MenuItem icon="notifications-outline" title="Notification" />
         <MenuItem icon="lock-closed-outline" title="Security" />
         <MenuItem icon="language-outline" title="Language" />
         <MenuItem icon="help-circle-outline" title="Help Center" />
         <MenuItem icon="people-outline" title="Invite Friends" />
-        <MenuItem icon="log-out-outline" title="Logout" textColor="text-red-500" />
+        <TouchableOpacity
+        className="mt-16 bg-yellow-400 rounded-3xl py-3 px-3 flex-row items-center justify-center"
+        onPress={() => {
+        router.replace("/(auth)/login");
+        }}
+>
+  <Ionicons name="log-out-outline" size={22} color="#000000" />
+  <Text className="ml-2 text-xl font-semibold text-black">Logout</Text>
+</TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -74,7 +83,7 @@ const ProfileScreen = () => {
 
 // Reusable Menu Item Component
 const MenuItem = ({ icon, title, color = "#333" }) => (
-  <TouchableOpacity className="flex-row items-center justify-between py-3 border-b border-gray-200">
+  <TouchableOpacity className="flex-row items-center justify-between py-3 px-4 border-b border-gray-200">
     <View className="flex-row items-center">
       <Ionicons name={icon} size={22} color={color} />
       <Text className="ml-4 text-base text-[#333]">{title}</Text>

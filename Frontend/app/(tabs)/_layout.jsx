@@ -1,16 +1,28 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text,Image } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
-const TabIcon = ({ name, focused, title }) => {
+import SearchIcon from "../../assets/images/Icon.png"; // Import your custom icon
+const TabIcon = ({ name, focused, title , customIcon }) => {
   return (
-    <View className="flex-1 mt-2 items-center justify-center">
-      <Ionicons
-        name={focused ? name : `${name}-outline`}
-        size={22}
-        color={focused ? "#FFC107" : "black"}
-      />
+    <View className="flex-1 mt-2 items-center justify-center height: 40">
+      {customIcon ? (
+        <Image
+          source={customIcon}
+          style={{
+            width: 36,
+            height: 36,
+            tintColor: focused ? "#FFC107" : "#000",
+            resizeMode: "contain",
+          }}
+        />
+      ) : (
+        <Ionicons
+          name={focused ? name : `${name}-outline`}
+          size={22}
+          color={focused ? "#FFC107" : "#000"}
+        />
+      )}
       <Text className={`text-xs mt-2 ${focused ? "text-[#FFC107]" : "text-[black]"}`}>
         {title}
       </Text>
@@ -50,7 +62,7 @@ const TabsLayout = () => {
         options={{
           title: "Explore",
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="search" focused={focused} title="Explore" />
+            <TabIcon name="search" focused={focused} title="Explore" customIcon={SearchIcon}/>
           ),
         }}
       />
