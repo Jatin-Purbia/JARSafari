@@ -5,13 +5,19 @@ import { Ionicons } from "@expo/vector-icons";
 
 const TabIcon = ({ name, focused, title }) => {
   return (
-    <View className="flex-1 mt-2 items-center justify-center">
+    <View className="flex-col items-center justify-center">
       <Ionicons
         name={focused ? name : `${name}-outline`}
-        size={22}
+        size={24}
         color={focused ? "#FFC107" : "black"}
       />
-      <Text className={`text-xs mt-2 ${focused ? "text-[#FFC107]" : "text-[black]"}`}>
+      <Text
+        className={`text-xs mt-1 ${
+          focused ? "text-[#FFC107]" : "text-black"
+        }`}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {title}
       </Text>
     </View>
@@ -33,6 +39,8 @@ const TabsLayout = () => {
           backgroundColor: "#fff",
           borderTopColor: "#0061FF1A",
           borderTopWidth: 1,
+          paddingBottom: 10,
+          paddingTop: 10,
         },
       }}
     >
