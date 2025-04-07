@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
-import * as ImagePicker from "expo-image-picker"; // To pick images
-import { Ionicons } from "@expo/vector-icons"; // Icons for UI
-import { useRouter } from "expo-router"; // For navigation
+import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const getColorForLetter = (letter) => {
   const colors = [
@@ -14,13 +14,12 @@ const getColorForLetter = (letter) => {
 };
 
 const ProfileScreen = () => {
-  const [profileImage, setProfileImage] = useState(null); // Initially no profile image
-  const userName = "Jatin"; // Replace with actual user name from backend
+  const [profileImage, setProfileImage] = useState(null);
+  const userName = "Jatin";
   const userInitial = userName.charAt(0).toUpperCase();
-  const bgColor = getColorForLetter(userInitial); // Get unique color for user
-  const router = useRouter(); // For navigation
+  const bgColor = getColorForLetter(userInitial);
+  const router = useRouter();
 
-  // Function to pick image from gallery
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -36,13 +35,13 @@ const ProfileScreen = () => {
 
   return (
     <ScrollView className="flex-1 bg-white px-5">
-      {/* Top Profile Header */}
+      {/* Top Header */}
       <View className="flex-row justify-between items-center mt-5">
-        <Text className="text-lg font-bold">Profile</Text>
-        <Ionicons name="notifications-outline" size={24} color="black" />
+        <Text className="text-lg font-bold text-slate-900">Profile</Text>
+        <Ionicons name="notifications-outline" size={24} color="#0C1C2D" />
       </View>
 
-      {/* Profile Image Section */}
+      {/* Profile Image */}
       <View className="items-center mt-6">
         <TouchableOpacity onPress={pickImage}>
           {profileImage ? (
@@ -56,7 +55,7 @@ const ProfileScreen = () => {
             </View>
           )}
         </TouchableOpacity>
-        <Text className="mt-3 text-2xl font-semibold">{userName}</Text>
+        <Text className="mt-3 text-2xl font-semibold text-slate-900">{userName}</Text>
       </View>
 
       {/* Profile Menu */}
@@ -67,28 +66,30 @@ const ProfileScreen = () => {
         <MenuItem icon="language-outline" title="Language" />
         <MenuItem icon="help-circle-outline" title="Help Center" />
         <MenuItem icon="people-outline" title="Invite Friends" />
+
+        {/* Logout Button - Unchanged */}
         <TouchableOpacity
-        className="mt-16 bg-yellow-400 rounded-3xl py-3 px-3 flex-row items-center justify-center"
-        onPress={() => {
-        router.replace("/(auth)/login");
-        }}
->
-  <Ionicons name="log-out-outline" size={22} color="#000000" />
-  <Text className="ml-2 text-xl font-semibold text-black">Logout</Text>
-</TouchableOpacity>
+          className="mt-16 bg-yellow-400 rounded-3xl py-3 px-3 flex-row items-center justify-center"
+          onPress={() => {
+            router.replace("/(auth)/login");
+          }}
+        >
+          <Ionicons name="log-out-outline" size={22} color="#000000" />
+          <Text className="ml-2 text-xl font-semibold text-black">Logout</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
 
-// Reusable Menu Item Component
-const MenuItem = ({ icon, title, color = "#333" }) => (
+const MenuItem = ({ icon, title }) => (
   <TouchableOpacity className="flex-row items-center justify-between py-3 px-4 border-b border-gray-200">
     <View className="flex-row items-center">
-      <Ionicons name={icon} size={22} color={color} />
-      <Text className="ml-4 text-base text-[#333]">{title}</Text>
+      <Ionicons name={icon} size={22} color="#0C1C2D" />
+      <Text className="ml-4 text-base text-slate-900">{title}</Text>
     </View>
     <Ionicons name="chevron-forward-outline" size={20} color="#999" />
   </TouchableOpacity>
 );
+
 export default ProfileScreen;
