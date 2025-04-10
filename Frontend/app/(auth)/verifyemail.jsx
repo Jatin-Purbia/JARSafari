@@ -7,32 +7,33 @@ const EmailInput = ({ onValidEmail }) => {
 
   // Function to validate email
   const validateEmail = (inputEmail) => {
+    const trimmedEmail = inputEmail.trim();  // ✨ Remove leading/trailing spaces
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Standard email format
-    setEmail(inputEmail);
 
-    if (!emailRegex.test(inputEmail)) {
+    setEmail(inputEmail); // Show raw input in field for user feedback
+
+    if (!emailRegex.test(trimmedEmail)) {
       setError("Invalid email address");
-      onValidEmail(false); // Notify parent that email is invalid
+      onValidEmail(false);
     } else {
       setError("");
-      onValidEmail(true);  // Notify parent that email is valid ✅
+      onValidEmail(true);
     }
   };
+
   return (
     <View className="w-full mb-4">
-      {/* Email Input Field */}
       <TextInput
         placeholder="Email Address"
         value={email}
-        onChangeText={validateEmail}  // Call validation on text change
+        onChangeText={validateEmail}
         className={`w-full p-4 border ${
           error ? "border-red-500" : "border-gray-300"
         } rounded-lg`}
       />
-
-      {/* Show Error Message If Email is Invalid */}
       {error ? <Text className="text-red-500">{error}</Text> : null}
     </View>
   );
 };
+
 export default EmailInput;
