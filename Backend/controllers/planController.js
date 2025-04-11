@@ -33,6 +33,7 @@ exports.getProductDetails = async (req, res, next) => {
         success: false,
         message: "Plan not found",
       });
+      // return next(new ErrorHandler("Plan not found", 404));
     }
     res.status(200).json({
       success: true,
