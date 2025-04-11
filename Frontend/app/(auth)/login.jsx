@@ -13,9 +13,9 @@ export default function LoginScreen() {
 
   const handleContinue = () => {
     if (isEmailValid && password.trim() !== "") {
-      // Navigate to the next page if both fields are valid
+      // Navigate to the Homepage if both fields are valid
       router.push("/Homepage");
-    }else{
+    } else {
       alert("Please enter a valid email and password.");
     }
   };
@@ -62,14 +62,13 @@ export default function LoginScreen() {
 
         {/* Continue Button */}
         <TouchableOpacity
-          className={"w-full py-4 rounded-3xl bg-yellow-400" }
-          disabled={!isEmailValid || password.trim() === ""} // Disable if email is invalid or password is empty
-          onPress={handleContinue} // Call handleContinue on press
-        >
+            className={"w-full py-4 rounded-3xl bg-yellow-400"}
+            onPress={() => handleContinue()} // Call the handleContinue function
+          >
             <Text className="text-black text-center font-semibold">
               Continue
             </Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
         {/* OR Option */}
         <View className="flex-row items-center my-10">
