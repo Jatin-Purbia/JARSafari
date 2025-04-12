@@ -1,20 +1,49 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { useDispatch, useSelector } from "react-redux";
+import { login, clearError } from "../../store/slices/authSlice";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
-  const isValidEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error,
+      });
+      dispatch(clearError());
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/Homepage");
+    }
+  }, [isAuthenticated]);
 
   const handleContinue = () => {
     if (!isValidEmail(email)) {
@@ -26,7 +55,7 @@ export default function LoginScreen() {
       return;
     }
 
-    if (password.trim() === "") {
+    if (!password.trim()) {
       Toast.show({
         type: "error",
         text1: "Empty Password",
@@ -35,87 +64,108 @@ export default function LoginScreen() {
       return;
     }
 
-    setIsLoggingIn(true);
-
-    setTimeout(() => {
-      setIsLoggingIn(false);
-      router.push("/Homepage");
-    }, 2000);
+    dispatch(login({ email, password }));
   };
 
   return (
-    <SafeAreaView className="flex-1 items-center bg-white">
-      {/* Logo */}
-      <Image
-        source={require("../../assets/images/logo.png")}
-        style={{ width: 120, height: 120, resizeMode: "contain", marginTop: 40 }}
-      />
-
-      <View className="px-8 w-full mt-6">
-        <Text className="text-3xl text-center font-bold mb-10">Login</Text>
-
-        {/* Email */}
-        <Text className="mb-1 font-medium text-gray-700">Email</Text>
-        <TextInput
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          className="w-full p-4 border border-gray-300 rounded-lg mb-4"
-        />
-
-        {/* Password */}
-        <Text className="mb-1 font-medium text-gray-700">Password</Text>
-        <View className="relative">
-          <TextInput
-            placeholder="Enter your password"
-            secureTextEntry={!passwordVisible}
-            value={password}
-            onChangeText={setPassword}
-            className="w-full p-4 border border-gray-300 rounded-lg mb-2"
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
-            className="absolute right-4 top-4"
-          >
-            <FontAwesome
-              name={passwordVisible ? "eye-slash" : "eye"}
-              size={20}
-              color="black"
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Forgot Password */}
-        {/* <Link href="/forgot-pass">
-          <Text className="mt-2 text-gray-600">
-            Forgot Password? <Text className="font-bold text-black">Reset</Text>
-          </Text>
-        </Link> */}
-
-        {/* Continue Button */}
-        <TouchableOpacity
-          className={`w-full py-4 mt-8 ${
-            isLoggingIn ? "bg-gray-400" : "bg-yellow-400"
-          } rounded-lg`}
-          onPress={handleContinue}
-          disabled={isLoggingIn}
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text className="text-black text-center font-semibold">
-            {isLoggingIn ? "Logging in..." : "Continue"}
-          </Text>
-        </TouchableOpacity>
+          <View className="flex-1 items-center justify-center px-6 py-10">
+            {/* Logo and Intro Text */}
+            <View className="items-center mb-8">
+              <Image
+                source={require("../../assets/images/logo.png")}
+                style={{ width: 120, height: 120, resizeMode: "contain" }}
+              />
+              <Text className="text-3xl font-bold text-gray-800 mt-4">Welcome Back</Text>
+              <Text className="text-gray-500 text-center mt-2">
+                Sign in to continue your journey with JARSafari
+              </Text>
+            </View>
 
-        {/* Create Account */}
-        <Text className="mt-8 text-gray-600 text-center">
-          Don’t have an account?{" "}
-          <Link href="/create-account" className="font-bold text-black">
-            Create One
-          </Link>
-        </Text>
-      </View>
+            {/* Email Input */}
+            <View className="w-full mb-4">
+              <Text className="mb-2 font-medium text-gray-700">Email</Text>
+              <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                <FontAwesome name="envelope" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                <TextInput
+                  placeholder="Enter your email"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  className="flex-1 text-gray-800"
+                />
+              </View>
+            </View>
 
+            {/* Password Input */}
+            <View className="w-full mb-6">
+              <Text className="mb-2 font-medium text-gray-700">Password</Text>
+              <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                <FontAwesome name="lock" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
+                <TextInput
+                  placeholder="Enter your password"
+                  secureTextEntry={!passwordVisible}
+                  value={password}
+                  onChangeText={setPassword}
+                  className="flex-1 text-gray-800"
+                />
+                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
+                  <FontAwesome
+                    name={passwordVisible ? "eye-slash" : "eye"}
+                    size={18}
+                    color="#9CA3AF"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={handleContinue}
+              disabled={loading || !email.trim() || !password.trim()}
+              className="w-full overflow-hidden rounded-lg mb-4"
+            >
+              <LinearGradient
+                colors={['#FCD34D', '#F59E0B']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="py-4 items-center"
+                style={{ opacity: (loading || !email.trim() || !password.trim()) ? 0.6 : 1 }}
+              >
+                {loading ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator color="black" style={{ marginRight: 8 }} />
+                    <Text className="text-black font-semibold text-lg">
+                      Signing in...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-black font-semibold text-lg">
+                    Sign In
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Create Account */}
+            <View className="flex-row justify-center items-center">
+              <Text className="text-gray-600">Don't have an account? </Text>
+              <Link href="/create-account">
+                <Text className="font-bold text-yellow-600">Create One</Text>
+              </Link>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Toast />
     </SafeAreaView>
   );

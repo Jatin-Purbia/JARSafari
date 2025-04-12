@@ -1,11 +1,14 @@
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useRouter, Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
+import { useDispatch, useSelector } from "react-redux";
+import { register, clearError } from "../../store/slices/authSlice";
+import { LinearGradient } from 'expo-linear-gradient';
 
-// ✅ Email validator component
+// ✅ Email Validator Component
 function VerifyEmail({ onValidEmail, setEmailGlobal }) {
   const [email, setEmail] = useState("");
 
@@ -14,20 +17,23 @@ function VerifyEmail({ onValidEmail, setEmailGlobal }) {
     const isValid = emailRegex.test(input);
     onValidEmail(isValid);
     setEmail(input);
-    setEmailGlobal(input); // Send back the email to parent
+    setEmailGlobal(input);
   };
 
   return (
     <View className="mb-4">
-      <Text className="mb-1 text-sm font-semibold text-gray-700">Email</Text>
-      <TextInput
-        placeholder="Enter your email"
-        value={email}
-        onChangeText={validateEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        className="w-full p-4 border border-gray-300 rounded-lg"
-      />
+      <Text className="mb-2 font-medium text-gray-700">Email</Text>
+      <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+        <FontAwesome name="envelope" size={18} color="#9CA3AF" className="mr-3" />
+        <TextInput
+          placeholder="Enter your email"
+          value={email}
+          onChangeText={validateEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          className="flex-1 text-gray-800"
+        />
+      </View>
     </View>
   );
 }
@@ -39,14 +45,61 @@ export default function CreateAccountScreen() {
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+  });
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
-  const handleContinue = () => {
+  // Password validation
+  const validatePassword = (pass) => {
+    setPassword(pass);
+    setPasswordStrength({
+      hasMinLength: pass.length >= 8,
+      hasUpperCase: /[A-Z]/.test(pass),
+      hasLowerCase: /[a-z]/.test(pass),
+      hasNumber: /[0-9]/.test(pass),
+    });
+  };
+
+  const isPasswordValid = Object.values(passwordStrength).every(Boolean);
+
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Registration Failed",
+        text2: error,
+      });
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/Homepage");
+    }
+  }, [isAuthenticated, router]);
+
+  const handleContinue = async () => {
     if (!isEmailValid) {
       Toast.show({
         type: "error",
         text1: "Invalid Email",
         text2: "Please enter a valid email address",
+      });
+      return;
+    }
+
+    if (!isPasswordValid) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Password",
+        text2: "Please meet all password requirements",
       });
       return;
     }
@@ -64,115 +117,172 @@ export default function CreateAccountScreen() {
       return;
     }
 
-    router.push("/welcome");
+    dispatch(register({ firstname, lastname, email, password }));
   };
 
   const isFormComplete =
-    firstname.trim() && lastname.trim() && password.trim() && email.trim();
+    firstname.trim() && lastname.trim() && password.trim() && email.trim() && isPasswordValid;
+
+  const renderPasswordRequirement = (met, text) => (
+    <View className="flex-row items-center mb-1">
+      <FontAwesome
+        name={met ? "check-circle" : "circle-o"}
+        size={14}
+        color={met ? "#10B981" : "#9CA3AF"}
+        className="mr-2"
+      />
+      <Text className={`text-sm ${met ? "text-green-600" : "text-gray-500"}`}>
+        {text}
+      </Text>
+    </View>
+  );
 
   return (
-    <SafeAreaView className="flex-1 items-center bg-white">
-      
-      <Image
-              source={require("../../assets/images/logo.png")}
-              style={{ width: 120, height: 120, resizeMode: "contain", marginTop: 40 }}
-            />
-      <View className="px-6 w-full mt-10">
-        <Text className="text-3xl text-center font-bold mb-12">
-          Create Account
-        </Text>
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View className="flex-1 items-center justify-center px-6 py-8">
+            {/* Logo */}
+            <View className="items-center mb-8">
+              <Image
+                source={require("../../assets/images/logo.png")}
+                style={{ width: 100, height: 100, resizeMode: "contain" }}
+                className="mb-4"
+              />
+              <Text className="text-3xl font-bold text-gray-800">Create Account</Text>
+              <Text className="text-gray-500 text-center mt-2">
+                Join JARSafari and start your adventure
+              </Text>
+            </View>
 
-        {/* First and Last Name */}
-        <View className="mb-3">
-          <Text className="mb-1 text-sm font-semibold text-gray-700">
-            First Name
-          </Text>
-          <TextInput
-            placeholder="Firstname"
-            value={firstname}
-            onChangeText={setFirstname}
-            className="w-full p-4 border border-gray-300 rounded-lg mb-3"
-          />
+            {/* Form */}
+            <View className="w-full mb-6">
+              {/* First & Last Name */}
+              <View className="flex-row mb-4">
+                <View className="flex-1 mr-2">
+                  <Text className="mb-2 font-medium text-gray-700">First Name</Text>
+                  <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                    <FontAwesome name="user" size={18} color="#9CA3AF" className="mr-3" />
+                    <TextInput
+                      placeholder="Firstname"
+                      value={firstname}
+                      onChangeText={setFirstname}
+                      className="flex-1 text-gray-800"
+                    />
+                  </View>
+                </View>
 
-          <Text className="mb-1 text-sm font-semibold text-gray-700">
-            Last Name
-          </Text>
-          <TextInput
-            placeholder="Lastname"
-            value={lastname}
-            onChangeText={setLastname}
-            className="w-full p-4 border border-gray-300 rounded-lg mb-3"
-          />
-        </View>
+                <View className="flex-1 ml-2">
+                  <Text className="mb-2 font-medium text-gray-700">Last Name</Text>
+                  <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                    <FontAwesome name="user" size={18} color="#9CA3AF" className="mr-3" />
+                    <TextInput
+                      placeholder="Lastname"
+                      value={lastname}
+                      onChangeText={setLastname}
+                      className="flex-1 text-gray-800"
+                    />
+                  </View>
+                </View>
+              </View>
 
-        {/* Email */}
-        <VerifyEmail
-          onValidEmail={setIsEmailValid}
-          setEmailGlobal={setEmail}
-        />
+              {/* Email */}
+              <VerifyEmail
+                onValidEmail={setIsEmailValid}
+                setEmailGlobal={setEmail}
+              />
 
-        {/* Password */}
-        <View className="mb-4 relative">
-          <Text className="mb-1 text-sm font-semibold text-gray-700">
-            Password
-          </Text>
-          <TextInput
-            placeholder="Enter your password"
-            secureTextEntry={!passwordVisible}
-            value={password}
-            onChangeText={setPassword}
-            className="w-full p-4 border border-gray-300 rounded-lg pr-12"
-          />
-          <TouchableOpacity
-            onPress={() => setPasswordVisible(!passwordVisible)}
-            className="absolute right-4 top-11"
-          >
-            <FontAwesome
-              name={passwordVisible ? "eye-slash" : "eye"}
-              size={20}
-              color="gray"
-            />
-          </TouchableOpacity>
-        </View>
+              {/* Password */}
+              <View className="mb-6">
+                <Text className="mb-2 font-medium text-gray-700">Password</Text>
+                <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                  <FontAwesome name="lock" size={18} color="#9CA3AF" className="mr-3" />
+                  <TextInput
+                    placeholder="Enter your password"
+                    secureTextEntry={!passwordVisible}
+                    value={password}
+                    onChangeText={validatePassword}
+                    className="flex-1 text-gray-800"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setPasswordVisible(!passwordVisible)}
+                  >
+                    <FontAwesome
+                      name={passwordVisible ? "eye-slash" : "eye"}
+                      size={18}
+                      color="#9CA3AF"
+                    />
+                  </TouchableOpacity>
+                </View>
 
-        {/* Continue Button */}
-        <TouchableOpacity
-          className={`w-full py-4 rounded-xl ${
-            isFormComplete ? "bg-yellow-400" : "bg-gray-300"
-          }`}
-          onPress={handleContinue}
-          disabled={!isFormComplete}
-        >
-          <Text className="text-black text-center font-semibold text-base">
-            Continue
-          </Text>
-        </TouchableOpacity>
+                {/* Password Requirements */}
+                <View className="mt-2 px-2">
+                  {renderPasswordRequirement(
+                    passwordStrength.hasMinLength,
+                    "At least 8 characters"
+                  )}
+                  {renderPasswordRequirement(
+                    passwordStrength.hasUpperCase,
+                    "One uppercase letter"
+                  )}
+                  {renderPasswordRequirement(
+                    passwordStrength.hasLowerCase,
+                    "One lowercase letter"
+                  )}
+                  {renderPasswordRequirement(
+                    passwordStrength.hasNumber,
+                    "One number"
+                  )}
+                </View>
+              </View>
 
-        {/* Divider */}
-        {/* <View className="flex-row items-center my-10">
-          <View className="flex-1 h-px bg-gray-300" />
-          <Text className="mx-4 text-gray-500">or</Text>
-          <View className="flex-1 h-px bg-gray-300" />
-        </View> */}
+              {/* Continue Button */}
+              <TouchableOpacity
+                onPress={handleContinue}
+                disabled={!isFormComplete || loading}
+                className="overflow-hidden rounded-lg"
+              >
+                <LinearGradient
+                  colors={['#FCD34D', '#F59E0B']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  className="py-4 items-center"
+                  style={{ opacity: isFormComplete && !loading ? 1 : 0.6 }}
+                >
+                  {loading ? (
+                    <View className="flex-row items-center">
+                      <ActivityIndicator color="black" className="mr-2" />
+                      <Text className="text-black font-semibold text-lg">
+                        Creating account...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="text-black font-semibold text-lg">
+                      Create Account
+                    </Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
 
-        {/* Google Button */}
-        {/* <TouchableOpacity className="w-full flex-row items-center p-4 border border-gray-300 rounded-3xl">
-          <FontAwesome name="google" size={20} color="gray" />
-          <Text className="text-center flex-1 font-semibold">
-            Continue With Google
-          </Text>
-        </TouchableOpacity> */}
+            {/* Login Link */}
+            <View className="flex-row justify-center items-center mt-4">
+              <Text className="text-gray-600">
+                Already have an account?{" "}
+              </Text>
+              <Link href="/login">
+                <Text className="font-bold text-yellow-600">
+                  Login
+                </Text>
+              </Link>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-        {/* Login link */}
-        <Text className="mt-6 text-gray-600 text-center">
-          Already have an account?{" "}
-          <Link href="/login">
-            <Text className="font-bold text-black">Login</Text>
-          </Link>
-        </Text>
-      </View>
-
-      {/* Toast shown here */}
       <Toast />
     </SafeAreaView>
   );

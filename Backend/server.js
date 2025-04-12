@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const connectDB = require("./config/database");
 
 //config dotenv
-dotenv.config({path: "backend/config/config.env"});
+dotenv.config();
 
 //connect to database
 connectDB();
@@ -17,10 +17,11 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const server = app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running on http://localhost:${process.env.PORT || 3000}`);
-});
+const PORT = process.env.PORT || 4000;
 
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
 
 //unhandled promise rejection
 process.on("unhandledRejection", (err) => {
