@@ -20,7 +20,7 @@ export default function LandingPage() {
         Explore new destinations
       </Text>
       {/* Start Journey Button */}
-      <TouchableOpacity onPress={() => router.push("/auth/login")} className="w-11/12 bg-yellow-400 py-4 rounded-2xl shadow-lg shadow-gray-300">
+      <TouchableOpacity onPress={() => router.push("/(auth)/login")} className="w-11/12 bg-yellow-400 py-4 rounded-2xl shadow-lg shadow-gray-300">
         <Text className="text-black text-center text-2xl font-semibold">
           Start Your Journey
           </Text>
