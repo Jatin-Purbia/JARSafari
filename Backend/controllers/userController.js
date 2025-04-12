@@ -144,7 +144,7 @@ exports.logoutUser = async (req, res, next) => {
 //get user details
 exports.getUserDetails = async (req, res, next) => {
   try {
-    const user = await User.findById(req.User.id); // Assuming req.user.id contains the authenticated user's ID
+    const user = await User.findById(req.params.id); // Assuming req.user.id contains the authenticated user's ID
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -167,32 +167,87 @@ exports.getUserDetails = async (req, res, next) => {
 
 
 // update user password
-exports.updatePassword = async (req, res, next) => {    
-  const user = await User.findById(req.User.id); // Assuming req.user.id contains the authenticated user's ID
-  const isPasswordMatched = await user.comparePassword(req.body.oldPassword);  
-  if (!isPasswordMatched) {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid old password",
-    });
+exports.updatePassword = async (req, res, next) => {
+  try {
+      // Find the user by ID and include the password field
+      const user = await User.findById(req.params.id).select("+password");
+
+      if (!user) {
+          return res.status(404).json({
+              success: false,
+              message: "User not found",
+          });
+      }
+
+      // Check if the old password matches
+      const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+      if (!isPasswordMatched) {
+          return res.status(401).json({
+              success: false,
+              message: "Invalid old password",
+          });
+      }
+
+      // Check if the new password and confirm password match
+      if (req.body.password !== req.body.confirmPassword) {
+          return res.status(400).json({
+              success: false,
+              message: "Password and confirm password do not match",
+          });
+      }
+
+      // Update the password
+      user.password = req.body.password;
+      await user.save();
+
+      res.status(200).json({
+          success: true,
+          message: "Password updated successfully",
+      });
+  } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({
+          success: false,
+          message: "Internal Server Error",
+          error: error.message,
+      });
   }
-  user.password = req.body.password;
-  await user.save();
-  res.status(200).json({  
-    success: true,
-    message: "Password updated successfully",
-  });
-};  
+};
+
 
 // update user profile  
-exports.updateProfile = async (req, res, next) => {    
-  const user = await User.findById(req.User.id); // Assuming req.user.id contains the authenticated user's ID
-  user.firstname = req.body.firstname;
-  user.lastname = req.body.lastname;
-  user.email = req.body.email;
-  await user.save();
-  res.status(200).json({  
-    success: true,
-    message: "Profile updated successfully",
-  });
-};  
+exports.updateProfile = async (req, res, next) => {
+  try {
+      const newUserData = {
+          firstname: req.body.firstname,
+          lastname: req.body.lastname,
+          email: req.body.email,
+      };
+
+      // Update the user's profile
+      const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+          new: true, // Return the updated document
+          runValidators: true, // Validate the updated fields
+      });
+
+      if (!user) {
+          return res.status(404).json({
+              success: false,
+              message: "User not found",
+          });
+      }
+
+      res.status(200).json({
+          success: true,
+          message: "Profile updated successfully",
+          user,
+      });
+  } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({
+          success: false,
+          message: "Internal Server Error",
+          error: error.message,
+      });
+  }
+};

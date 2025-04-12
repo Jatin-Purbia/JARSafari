@@ -24,7 +24,7 @@ exports.getAllPlans = async (req, res, next) => {
 };
 
 // Get a single plan (admin exclusive)
-exports.getProductDetails = async (req, res, next) => {
+exports.getPlanDetails = async (req, res, next) => {
   console.log("Fetching single plan...");
   try {
     const plan = await Plan.findById(req.params.id);
