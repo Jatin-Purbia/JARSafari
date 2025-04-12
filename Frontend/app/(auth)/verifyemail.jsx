@@ -1,32 +1,24 @@
 import React, { useState } from "react";
-import { View, TextInput } from "react-native";
-import Toast from "react-native-toast-message";
+import { View, TextInput, Text } from "react-native";
 
 const VerifyEmail = ({ onValidEmail, exposeEmail }) => {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
 
-  const handleInputChange = (inputEmail) => {
-    setEmail(inputEmail);
-    exposeEmail(inputEmail); // pass raw email to parent
-  };
+  // Function to validate email
+  const validateEmail = (inputEmail) => {
+    const trimmedEmail = inputEmail.trim();  // ✨ Remove leading/trailing spaces
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Standard email format
 
-  // This is called from parent on button press
-  VerifyEmail.validateOnSubmit = () => {
-    const trimmed = email.trim();
-    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    setEmail(inputEmail); // Show raw input in field for user feedback
 
-    if (!isValid) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address.",
-        visibilityTime: 3000,
-        position: "bottom",
-      });
+    if (!emailRegex.test(trimmedEmail)) {
+      setError("Invalid email address");
+      onValidEmail(false);
+    } else {
+      setError("");
+      onValidEmail(true);
     }
-
-    onValidEmail(isValid);
-    return isValid;
   };
 
   return (
@@ -34,10 +26,12 @@ const VerifyEmail = ({ onValidEmail, exposeEmail }) => {
       <TextInput
         placeholder="Email Address"
         value={email}
-        onChangeText={handleInputChange}
-        className="w-full p-4 border border-slate-300 rounded-lg text-white bg-slate-800"
-        placeholderTextColor="#CBD5E1"
+        onChangeText={validateEmail}
+        className={`w-full p-4 border ${
+          error ? "border-red-500" : "border-gray-300"
+        } rounded-lg`}
       />
+      {error ? <Text className="text-red-500">{error}</Text> : null}
     </View>
   );
 };

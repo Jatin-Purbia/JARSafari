@@ -8,7 +8,7 @@ const TabIcon = ({ name, focused, title}) => {
     <View className="flex-1 mt-2 items-center justify-center">
       <Ionicons
         name={focused ? name : `${name}-outline`}
-        size={22}
+        size={20}
         color={focused ? "#FFC107" : "black"}
       />
       <Text className={`text-xs mt-2 ${focused ? "text-[#FFC107]" : "text-[black]"}`}
@@ -31,7 +31,7 @@ const TabsLayout = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 70,
+          height: 60,
           backgroundColor: "#fff",
           borderTopColor: "#0061FF1A",
           borderTopWidth: 1,
