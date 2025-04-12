@@ -33,7 +33,6 @@ exports.getPlanDetails = async (req, res, next) => {
         success: false,
         message: "Plan not found",
       });
-      // return next(new ErrorHandler("Plan not found", 404));
     }
     res.status(200).json({
       success: true,
@@ -99,7 +98,6 @@ exports.updatePlan = async (req, res, next) => {
         message: "Internal Server Error",
     });
   }
-  
 };
 
 // Delete a plan (admin exclusive)
