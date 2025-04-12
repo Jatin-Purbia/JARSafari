@@ -1,22 +1,19 @@
 import React, { useState } from "react";
-import { View, TextInput, Text } from "react-native";
+import { View, TextInput } from "react-native";
 
 const EmailInput = ({ onValidEmail }) => {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
 
-  // Function to validate email
   const validateEmail = (inputEmail) => {
-    const trimmedEmail = inputEmail.trim();  // ✨ Remove leading/trailing spaces
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Standard email format
+    const trimmedEmail = inputEmail.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    setEmail(inputEmail); // Show raw input in field for user feedback
+    setEmail(inputEmail);
+    // setEmailGlobal(inputEmail); // Send value up to parent
 
     if (!emailRegex.test(trimmedEmail)) {
-      setError("Invalid email address");
       onValidEmail(false);
     } else {
-      setError("");
       onValidEmail(true);
     }
   };
@@ -27,11 +24,10 @@ const EmailInput = ({ onValidEmail }) => {
         placeholder="Email Address"
         value={email}
         onChangeText={validateEmail}
-        className={`w-full p-4 border ${
-          error ? "border-red-500" : "border-gray-300"
-        } rounded-lg`}
+        className="w-full p-4 border border-gray-300 rounded-lg"
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
-      {error ? <Text className="text-red-500">{error}</Text> : null}
     </View>
   );
 };

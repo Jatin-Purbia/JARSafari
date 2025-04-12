@@ -22,6 +22,13 @@ export default function Homepage() {
           Where do you want to go today?
         </Text>
 
+        {/* Tagline */}
+        <View className="mt-2 mb-6">
+          <Text className="text-2xl font-semibold text-black leading-snug">
+            Explore like never{'\n'}before.
+          </Text>
+        </View>
+
         {/* Search Bar */}
         <View className="flex-row items-center bg-white border border-gray-300 rounded-2xl px-3 py-1 mb-6 shadow-sm">
           <Ionicons name="search" size={24} color="#999" />
@@ -29,10 +36,13 @@ export default function Homepage() {
             placeholder="Search for a location..."
             className="ml-3 flex-1 text-base text-black"
             placeholderTextColor="#999"
-          /> 
+          />
         </View>
 
-        {/* Quick Access */}
+        {/* Recommendations */}
+        <Text className="text-lg font-semibold text-yellow-500 mb-3">
+          Recommendations
+        </Text>
         <View className="flex-row justify-between mb-6">
           {[
             { icon: "home", label: "Hostel" },
@@ -43,8 +53,8 @@ export default function Homepage() {
             const IconLib = item.lib || Ionicons;
             return (
               <View className="items-center" key={index}>
-                <View className="bg-gray-100 rounded-full p-3 mb-1 shadow-sm">
-                  <IconLib name={item.icon} size={22} color="#0C1C2D" />
+                <View className="bg-yellow-100 rounded-full p-3 mb-1 shadow-sm">
+                  <IconLib name={item.icon} size={22} color="#FFC107" />
                 </View>
                 <Text className="text-black text-sm text-center">{item.label}</Text>
               </View>
@@ -52,24 +62,13 @@ export default function Homepage() {
           })}
         </View>
 
-        {/* Mini Map Preview */}
-        <TouchableOpacity onPress={() => router.push("/Mapscreen")}>
-        <View className="bg-white border border-gray-300 rounded-2xl h-32 items-center justify-center mb-6 shadow-sm">
-          <Ionicons name="location" size={28} color="#0C1C2D" />
-          <Text className="text-black mt-2 font-medium">Map Preview</Text>
-        </View>
+        {/* Plan a Trip Button */}
+        <TouchableOpacity
+          onPress={() => router.push("/Mapscreen")}
+          className="bg-yellow-400 py-4 rounded-2xl items-center shadow-md mb-6"
+        >
+          <Text className="text-black font-bold text-base">Plan a Trip</Text>
         </TouchableOpacity>
-
-        {/* Favorites */}
-        <Text className="text-lg font-semibold text-black mb-3">Favorites</Text>
-        <View className="space-y-2 mb-6">
-          <TouchableOpacity className="bg-white border border-gray-300 px-4 py-3 rounded-xl shadow-sm mb-3">
-            <Text className="text-black font-semibold">Hostel → Lecture Hall</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="bg-white border border-gray-300 px-4 py-3 rounded-xl shadow-sm">
-            <Text className="text-black font-semibold">Hostel → Mess</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Recent Routes */}
         <Text className="text-lg font-semibold text-black mb-3">Recent Routes</Text>

@@ -6,14 +6,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState(""); // Now email state is managed here
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const router = useRouter();
 
   const isValidEmail = (email) => {
-    // Basic email validation regex
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
@@ -38,7 +37,6 @@ export default function LoginScreen() {
 
     setIsLoggingIn(true);
 
-    // Simulate login delay
     setTimeout(() => {
       setIsLoggingIn(false);
       router.push("/Homepage");
@@ -49,14 +47,14 @@ export default function LoginScreen() {
     <SafeAreaView className="flex-1 items-center bg-white">
       {/* Logo */}
       <Image
-        source={require("../../assets/images/logo.png")} // replace with your actual logo path
+        source={require("../../assets/images/logo.png")}
         style={{ width: 120, height: 120, resizeMode: "contain", marginTop: 40 }}
       />
 
       <View className="px-8 w-full mt-6">
         <Text className="text-3xl text-center font-bold mb-10">Login</Text>
 
-        {/* Email Label and Input */}
+        {/* Email */}
         <Text className="mb-1 font-medium text-gray-700">Email</Text>
         <TextInput
           placeholder="Enter your email"
@@ -67,7 +65,7 @@ export default function LoginScreen() {
           className="w-full p-4 border border-gray-300 rounded-lg mb-4"
         />
 
-        {/* Password Label and Input */}
+        {/* Password */}
         <Text className="mb-1 font-medium text-gray-700">Password</Text>
         <View className="relative">
           <TextInput
@@ -89,18 +87,18 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Forgot Password Link */}
-        <Link href="/forgot-pass">
+        {/* Forgot Password */}
+        {/* <Link href="/forgot-pass">
           <Text className="mt-2 text-gray-600">
             Forgot Password? <Text className="font-bold text-black">Reset</Text>
           </Text>
-        </Link>
+        </Link> */}
 
         {/* Continue Button */}
         <TouchableOpacity
           className={`w-full py-4 mt-8 ${
             isLoggingIn ? "bg-gray-400" : "bg-yellow-400"
-          } rounded-lg`} // Reduced border radius
+          } rounded-lg`}
           onPress={handleContinue}
           disabled={isLoggingIn}
         >
@@ -109,7 +107,7 @@ export default function LoginScreen() {
           </Text>
         </TouchableOpacity>
 
-        {/* Create Account Link */}
+        {/* Create Account */}
         <Text className="mt-8 text-gray-600 text-center">
           Don’t have an account?{" "}
           <Link href="/create-account" className="font-bold text-black">
