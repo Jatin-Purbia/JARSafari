@@ -1,24 +1,32 @@
 import React, { useState } from "react";
-import { View, TextInput, Text } from "react-native";
+import { View, TextInput } from "react-native";
+import Toast from "react-native-toast-message";
 
-const EmailInput = ({ onValidEmail }) => {
+const VerifyEmail = ({ onValidEmail, exposeEmail }) => {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
 
-  // Function to validate email
-  const validateEmail = (inputEmail) => {
-    const trimmedEmail = inputEmail.trim();  // ✨ Remove leading/trailing spaces
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;  // Standard email format
+  const handleInputChange = (inputEmail) => {
+    setEmail(inputEmail);
+    exposeEmail(inputEmail); // pass raw email to parent
+  };
 
-    setEmail(inputEmail); // Show raw input in field for user feedback
+  // This is called from parent on button press
+  VerifyEmail.validateOnSubmit = () => {
+    const trimmed = email.trim();
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 
-    if (!emailRegex.test(trimmedEmail)) {
-      setError("Invalid email address");
-      onValidEmail(false);
-    } else {
-      setError("");
-      onValidEmail(true);
+    if (!isValid) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address.",
+        visibilityTime: 3000,
+        position: "bottom",
+      });
     }
+
+    onValidEmail(isValid);
+    return isValid;
   };
 
   return (
@@ -26,14 +34,12 @@ const EmailInput = ({ onValidEmail }) => {
       <TextInput
         placeholder="Email Address"
         value={email}
-        onChangeText={validateEmail}
-        className={`w-full p-4 border ${
-          error ? "border-red-500" : "border-gray-300"
-        } rounded-lg`}
+        onChangeText={handleInputChange}
+        className="w-full p-4 border border-slate-300 rounded-lg text-white bg-slate-800"
+        placeholderTextColor="#CBD5E1"
       />
-      {error ? <Text className="text-red-500">{error}</Text> : null}
     </View>
   );
 };
 
-export default EmailInput;
+export default VerifyEmail;

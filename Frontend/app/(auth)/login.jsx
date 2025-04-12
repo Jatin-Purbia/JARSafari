@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function LoginScreen() {
   const [isEmailValid, setIsEmailValid] = useState(false);
   const [password, setPassword] = useState(""); // Tracks password input
+  const [email, setEmail] = useState(""); // 👈 Add this
   const router = useRouter(); // For navigation
   const [passwordVisible, setPasswordVisible] = useState(false); // Tracks password visibility
 
@@ -26,7 +27,7 @@ export default function LoginScreen() {
         <Text className="text-3xl text-center font-bold mb-14">Login</Text>
 
         {/* Email Input Field (Using VerifyEmail) */}
-        <VerifyEmail onValidEmail={setIsEmailValid} />
+        <VerifyEmail onValidEmail={setIsEmailValid} exposeEmail={setEmail} />
 
         <View className="relative">
         {/* Password Input Field */}
