@@ -13,7 +13,6 @@ const VerifyEmail = ({ onValidEmail, exposeEmail }) => {
     setEmail(inputEmail); // Show raw input in field for user feedback
 
     if (!emailRegex.test(trimmedEmail)) {
-      setError("Invalid email address");
       onValidEmail(false);
     } else {
       setError("");
