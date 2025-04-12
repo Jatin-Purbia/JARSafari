@@ -50,7 +50,7 @@ export default function LoginScreen() {
       {/* Logo */}
       <Image
         source={require("../../assets/images/logo.png")}
-        style={{ width: 120, height: 120, resizeMode: "contain", marginTop: 40 }}
+        style={{ width: 120, height: 120, marginTop: 40 }}
       />
 
       <View style={{ paddingHorizontal: 32, width: "100%", marginTop: 24 }}>

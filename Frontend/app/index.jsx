@@ -1,8 +1,10 @@
 import { Text, View, Image, TouchableOpacity } from "react-native";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import "../global.css"
 export default function LandingPage() {
+
+  const router = useRouter(); // For navigation
   return (
     <View className="flex-1 justify-center items-center px-6 bg-white">
       {/* Jarsafari Logo */}
@@ -18,12 +20,10 @@ export default function LandingPage() {
         Explore new destinations
       </Text>
       {/* Start Journey Button */}
-      <TouchableOpacity className="w-11/12 bg-yellow-400 py-4 rounded-2xl shadow-lg shadow-gray-300">
-        <Link href="/login">
+      <TouchableOpacity onPress={() => router.push("/auth/login")} className="w-11/12 bg-yellow-400 py-4 rounded-2xl shadow-lg shadow-gray-300">
         <Text className="text-black text-center text-2xl font-semibold">
           Start Your Journey
           </Text>
-        </Link>
       </TouchableOpacity>
     </View>
   );

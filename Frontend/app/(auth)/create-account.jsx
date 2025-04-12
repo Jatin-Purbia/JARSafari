@@ -75,7 +75,7 @@ export default function CreateAccountScreen() {
       
       <Image
               source={require("../../assets/images/logo.png")}
-              style={{ width: 120, height: 120, resizeMode: "contain", marginTop: 40 }}
+              style={{ width: 120, height: 120, marginTop: 40 }}
             />
       <View className="px-6 w-full mt-10">
         <Text className="text-3xl text-center font-bold mb-12">
