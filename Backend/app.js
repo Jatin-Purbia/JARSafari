@@ -11,7 +11,7 @@ app.use(express.json());
 
 //Route defination
 app.use("/api/v1", plan);
-app.use("/api/v1",user);
+app.use("/api/v1", user);
 
 //Middleware for error
 app.use(errprMiddleware);
