@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Dimensions, Alert } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from 'react-native-webview';
 
 // Campus graph representation for Dijkstra's algorithm
 const campusGraph = {
   "Hostel A": { "Academic Block": 5, "Cafeteria": 3, "Library": 7 },
   "Hostel B": { "Academic Block": 6, "Cafeteria": 4, "Library": 8 },
   "Academic Block": { "Hostel A": 5, "Hostel B": 6, "Library": 2, "Cafeteria": 4 },
-  "Library": { "Academic Block": 2, "Hostel A": 7, "Hostel B": 8, "Cafeteria": 3, "Sports Complex": 6 },
+  "Library": { "Hostel A": 7, "Hostel B": 8, "Cafeteria": 3, "Sports Complex": 6 },
   "Cafeteria": { "Hostel A": 3, "Hostel B": 4, "Academic Block": 4, "Library": 3, "Sports Complex": 5 },
   "Sports Complex": { "Library": 6, "Cafeteria": 5, "Medical Center": 4 },
   "Medical Center": { "Sports Complex": 4, "Hostel C": 3 },
@@ -19,22 +18,6 @@ const campusGraph = {
   "Parking Lot": { "Hostel D": 4, "Main Gate": 3 },
   "Main Gate": { "Parking Lot": 3, "Auditorium": 5 },
   "Auditorium": { "Main Gate": 5, "Academic Block": 6 }
-};
-
-// Location coordinates for Google Maps (IIT Jodhpur)
-const locationCoordinates = {
-  "Hostel A": { lat: 26.2518, lng: 73.1137 },
-  "Hostel B": { lat: 26.2525, lng: 73.1145 },
-  "Academic Block": { lat: 26.2530, lng: 73.1150 },
-  "Library": { lat: 26.2535, lng: 73.1155 },
-  "Cafeteria": { lat: 26.2528, lng: 73.1148 },
-  "Sports Complex": { lat: 26.2540, lng: 73.1160 },
-  "Medical Center": { lat: 26.2545, lng: 73.1165 },
-  "Hostel C": { lat: 26.2550, lng: 73.1170 },
-  "Hostel D": { lat: 26.2555, lng: 73.1175 },
-  "Parking Lot": { lat: 26.2560, lng: 73.1180 },
-  "Main Gate": { lat: 26.2565, lng: 73.1185 },
-  "Auditorium": { lat: 26.2532, lng: 73.1152 }
 };
 
 // Dijkstra's algorithm implementation
@@ -102,152 +85,11 @@ function dijkstra(graph, start, end) {
   return { path, distance, time: timeMinutes };
 }
 
-// Generate Google Maps HTML with route
-function generateGoogleMapsHTML(start, end, path) {
-  // Get coordinates for the path
-  const pathCoordinates = path.map(loc => locationCoordinates[loc]);
-  
-  // Create markers for start and end
-  const startMarker = locationCoordinates[start];
-  const endMarker = locationCoordinates[end];
-  
-  // Create a static map URL for the top image
-  const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=26.2530,73.1150&zoom=15&size=600x300&maptype=hybrid&markers=color:green%7C${startMarker.lat},${startMarker.lng}&markers=color:red%7C${endMarker.lat},${endMarker.lng}&path=color:0x0000ff|weight:5|${pathCoordinates.map(coord => `${coord.lat},${coord.lng}`).join('|')}&key=YOUR_GOOGLE_MAPS_API_KEY`;
-  
-  return {
-    interactiveMap: `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { margin: 0; padding: 0; }
-        #map { width: 100%; height: 100%; }
-      </style>
-    </head>
-    <body>
-      <div id="map"></div>
-      <script>
-        function initMap() {
-          // Center on IIT Jodhpur
-          const iitJodhpur = { lat: 26.2530, lng: 73.1150 };
-          
-          // Create the map
-          const map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 16,
-            center: iitJodhpur,
-            mapTypeId: 'hybrid',
-            styles: [
-              {
-                "featureType": "poi",
-                "elementType": "labels",
-                "stylers": [{ "visibility": "off" }]
-              }
-            ]
-          });
-          
-          // Add markers for start and end
-          const startMarker = new google.maps.Marker({
-            position: ${JSON.stringify(startMarker)},
-            map: map,
-            title: '${start}',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#00FF00',
-              fillOpacity: 1,
-              strokeColor: '#FFFFFF',
-              strokeWeight: 2
-            }
-          });
-          
-          const endMarker = new google.maps.Marker({
-            position: ${JSON.stringify(endMarker)},
-            map: map,
-            title: '${end}',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: '#FF0000',
-              fillOpacity: 1,
-              strokeColor: '#FFFFFF',
-              strokeWeight: 2
-            }
-          });
-          
-          // Add markers for waypoints
-          const waypointMarkers = [];
-          ${path.slice(1, -1).map((loc, i) => `
-            waypointMarkers.push(new google.maps.Marker({
-              position: ${JSON.stringify(locationCoordinates[loc])},
-              map: map,
-              title: '${loc}',
-              icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 7,
-                fillColor: '#0000FF',
-                fillOpacity: 1,
-                strokeColor: '#FFFFFF',
-                strokeWeight: 1
-              }
-            }));
-          `).join('')}
-          
-          // Create the polyline for the route
-          const pathCoords = ${JSON.stringify(pathCoordinates)};
-          const routePath = pathCoords.map(coord => new google.maps.LatLng(coord.lat, coord.lng));
-          
-          const routeLine = new google.maps.Polyline({
-            path: routePath,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 3
-          });
-          
-          routeLine.setMap(map);
-          
-          // Fit bounds to show the entire route
-          const bounds = new google.maps.LatLngBounds();
-          routePath.forEach(point => bounds.extend(point));
-          map.fitBounds(bounds);
-          
-          // Add info windows for start and end
-          const startInfo = new google.maps.InfoWindow({
-            content: '<div style="padding: 10px;"><strong>${start}</strong><br>Starting Point</div>'
-          });
-          
-          const endInfo = new google.maps.InfoWindow({
-            content: '<div style="padding: 10px;"><strong>${end}</strong><br>Destination</div>'
-          });
-          
-          startMarker.addListener('click', () => {
-            startInfo.open(map, startMarker);
-          });
-          
-          endMarker.addListener('click', () => {
-            endInfo.open(map, endMarker);
-          });
-        }
-      </script>
-      <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
-      </script>
-    </body>
-    </html>
-  `,
-    staticMapUrl
-  };
-}
-
 const SearchScreen = () => {
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
   const [route, setRoute] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showMapView, setShowMapView] = useState(false);
-  const [htmlContent, setHtmlContent] = useState('');
-  const [staticMapUrl, setStaticMapUrl] = useState('');
   
   // Autocomplete states
   const [fromSuggestions, setFromSuggestions] = useState([]);
@@ -315,12 +157,6 @@ const SearchScreen = () => {
         }
         
         setRoute(result);
-        
-        // Generate Google Maps HTML
-        const { interactiveMap, staticMapUrl } = generateGoogleMapsHTML(fromLocation, toLocation, result.path);
-        setHtmlContent(interactiveMap);
-        setStaticMapUrl(staticMapUrl);
-        
         setIsLoading(false);
       } catch (error) {
         console.error('Error finding route:', error);
@@ -328,11 +164,6 @@ const SearchScreen = () => {
         setIsLoading(false);
       }
     }, 1000);
-  };
-
-  // Toggle map view
-  const toggleMapView = () => {
-    setShowMapView(!showMapView);
   };
 
   // Render suggestion item with improved UI
@@ -516,37 +347,6 @@ const SearchScreen = () => {
                       </View>
                     ))}
                   </View>
-                  
-                  <TouchableOpacity
-                    className="bg-blue-500 py-3 rounded-xl mt-4 flex-row items-center justify-center"
-                    onPress={toggleMapView}
-                  >
-                    <Ionicons name={showMapView ? "map" : "map-outline"} size={20} color="#FFF" />
-                    <Text className="text-center font-semibold text-white text-lg ml-2">
-                      {showMapView ? "Hide Map" : "Show Map"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {/* Google Maps View */}
-            {showMapView && route && (
-              <View className="px-6 mb-6" style={{ height: 400 }}>
-                <View className="bg-white rounded-2xl shadow-lg overflow-hidden" style={{ height: 400 }}>
-                  <WebView
-                    source={{ html: htmlContent }}
-                    style={{ flex: 1 }}
-                    javaScriptEnabled={true}
-                    domStorageEnabled={true}
-                    originWhitelist={['*']}
-                    mixedContentMode="always"
-                    onError={(syntheticEvent) => {
-                      const { nativeEvent } = syntheticEvent;
-                      console.warn('WebView error: ', nativeEvent);
-                      Alert.alert('Map Error', 'There was an error loading the map. Please try again.');
-                    }}
-                  />
                 </View>
               </View>
             )}
