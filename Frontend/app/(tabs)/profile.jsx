@@ -15,7 +15,7 @@ const getColorForLetter = (letter) => {
 
 const ProfileScreen = () => {
   const [profileImage, setProfileImage] = useState(null);
-  const userName = "Jatin";
+  const userName = "Sharan";
   const userInitial = userName.charAt(0).toUpperCase();
   const bgColor = getColorForLetter(userInitial);
   const router = useRouter();

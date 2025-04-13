@@ -42,7 +42,10 @@ const SearchLocation = () => {
   return (
     <SafeAreaView className="flex-1 bg-white px-4">
       {/* Header */}
-      <TouchableOpacity onPress={() => router.back()} className="flex-row items-center mt-2 mb-4 px-4">
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="flex-row items-center mt-2 mb-4 px-4"
+      >
         <Ionicons name="arrow-back" size={24} color="black" />
         <Text className="ml-2 text-lg font-semibold">Drop</Text>
       </TouchableOpacity>
