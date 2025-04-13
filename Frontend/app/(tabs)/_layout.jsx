@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text,Image } from "react-native";
+import { View, Text } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -12,7 +12,7 @@ const TabIcon = ({ name, focused, title}) => {
         color={focused ? "#FFC107" : "black"}
       />
       <Text className={`text-xs mt-2 ${focused ? "text-[#FFC107]" : "text-[black]"}`}
-       style={{ width: 60, textAlign: "center" }} // 👈 Ensures proper spacing
+       style={{ width: 60, textAlign: "center" }}
         >
         {title}
       </Text>
@@ -54,7 +54,7 @@ const TabsLayout = () => {
         options={{
           title: "Explore",
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="search" focused={focused} title="Explore"/>
+            <TabIcon name="compass" focused={focused} title="Explore"/>
           ),
         }}
       />
