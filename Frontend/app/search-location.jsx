@@ -15,7 +15,12 @@ const SearchLocation = () => {
     { name: "Hostel O4", coordinates: { latitude: 26.2978, longitude: 73.0168 } },
     { name: "Hostel I2", coordinates: { latitude: 26.4745, longitude: 73.1162 } },
     { name: "Academic Block", coordinates: { latitude: 26.4763, longitude: 73.1155 } },
-    { name: "Paota Circle, Bhadwasia", coordinates: { latitude: 26.3000, longitude: 73.0190 } },
+    { name: "Chemical Engineering Dept ", coordinates: { latitude: 26.479653 , longitude: 73.116677 } },
+    { name: "Library IITJ", coordinates: { latitude: 26.471295, longitude:73.113557 } },
+    { name: "New Mess", coordinates: { latitude: 26.472962,longitude: 73.117190 } },
+    { name: "Old Mess", coordinates: { latitude: 26.472057, longitude: 73.116748 } },
+    { name: "Hostel O3", coordinates: { latitude: 26.475427,  longitude: 73.117385 } },
+
   ];
 
   // Filter suggestions based on the focused input (pickup or drop)
