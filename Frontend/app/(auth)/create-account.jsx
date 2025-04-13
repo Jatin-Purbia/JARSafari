@@ -9,7 +9,7 @@ import { register, clearError } from "../../store/slices/authSlice";
 import { LinearGradient } from 'expo-linear-gradient';
 
 // ✅ Email Validator Component
-function VerifyEmail({ onValidEmail, setEmailGlobal }) {
+function VerifyEmail({ onValidEmail, setEmailGlobal, emailError, setEmailError }) {
   const [email, setEmail] = useState("");
 
   const validateEmail = (input) => {
@@ -18,12 +18,20 @@ function VerifyEmail({ onValidEmail, setEmailGlobal }) {
     onValidEmail(isValid);
     setEmail(input);
     setEmailGlobal(input);
+    
+    if (!input.trim()) {
+      setEmailError("Email is required");
+    } else if (!isValid) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
   };
 
   return (
     <View className="mb-4">
       <Text className="mb-2 font-medium text-gray-700">Email</Text>
-      <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+      <View className={`flex-row items-center border ${emailError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
         <FontAwesome name="envelope" size={18} color="#9CA3AF" className="mr-3" />
         <TextInput
           placeholder="Enter your email"
@@ -34,6 +42,7 @@ function VerifyEmail({ onValidEmail, setEmailGlobal }) {
           className="flex-1 text-gray-800"
         />
       </View>
+      {emailError ? <Text className="text-red-500 text-sm mt-1">{emailError}</Text> : null}
     </View>
   );
 }
@@ -51,6 +60,11 @@ export default function CreateAccountScreen() {
     hasLowerCase: false,
     hasNumber: false,
   });
+  const [firstnameError, setFirstnameError] = useState("");
+  const [lastnameError, setLastnameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  
   const router = useRouter();
   const dispatch = useDispatch();
   const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
@@ -64,6 +78,14 @@ export default function CreateAccountScreen() {
       hasLowerCase: /[a-z]/.test(pass),
       hasNumber: /[0-9]/.test(pass),
     });
+    
+    if (!pass.trim()) {
+      setPasswordError("Password is required");
+    } else if (!Object.values(passwordStrength).every(Boolean)) {
+      setPasswordError("Password does not meet requirements");
+    } else {
+      setPasswordError("");
+    }
   };
 
   const isPasswordValid = Object.values(passwordStrength).every(Boolean);
@@ -85,39 +107,54 @@ export default function CreateAccountScreen() {
     }
   }, [isAuthenticated, router]);
 
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Validate firstname
+    if (!firstname.trim()) {
+      setFirstnameError("First name is required");
+      isValid = false;
+    } else {
+      setFirstnameError("");
+    }
+    
+    // Validate lastname
+    if (!lastname.trim()) {
+      setLastnameError("Last name is required");
+      isValid = false;
+    } else {
+      setLastnameError("");
+    }
+    
+    // Validate email
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!isEmailValid) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+    
+    // Validate password
+    if (!password.trim()) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else if (!isPasswordValid) {
+      setPasswordError("Password does not meet requirements");
+      isValid = false;
+    } else {
+      setPasswordError("");
+    }
+    
+    return isValid;
+  };
+
   const handleContinue = async () => {
-    if (!isEmailValid) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address",
-      });
-      return;
+    if (validateForm()) {
+      dispatch(register({ firstname, lastname, email, password }));
     }
-
-    if (!isPasswordValid) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Password",
-        text2: "Please meet all password requirements",
-      });
-      return;
-    }
-
-    if (
-      firstname.trim() === "" ||
-      lastname.trim() === "" ||
-      password.trim() === ""
-    ) {
-      Toast.show({
-        type: "error",
-        text1: "Missing Fields",
-        text2: "Please fill in all the details",
-      });
-      return;
-    }
-
-    dispatch(register({ firstname, lastname, email, password }));
   };
 
   const isFormComplete =
@@ -164,28 +201,36 @@ export default function CreateAccountScreen() {
               <View className="flex-row mb-4">
                 <View className="flex-1 mr-2">
                   <Text className="mb-2 font-medium text-gray-700">First Name</Text>
-                  <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                  <View className={`flex-row items-center border ${firstnameError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
                     <FontAwesome name="user" size={18} color="#9CA3AF" className="mr-3" />
                     <TextInput
                       placeholder="Firstname"
                       value={firstname}
-                      onChangeText={setFirstname}
+                      onChangeText={(text) => {
+                        setFirstname(text);
+                        if (firstnameError) setFirstnameError("");
+                      }}
                       className="flex-1 text-gray-800"
                     />
                   </View>
+                  {firstnameError ? <Text className="text-red-500 text-sm mt-1">{firstnameError}</Text> : null}
                 </View>
 
                 <View className="flex-1 ml-2">
                   <Text className="mb-2 font-medium text-gray-700">Last Name</Text>
-                  <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                  <View className={`flex-row items-center border ${lastnameError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
                     <FontAwesome name="user" size={18} color="#9CA3AF" className="mr-3" />
                     <TextInput
                       placeholder="Lastname"
                       value={lastname}
-                      onChangeText={setLastname}
+                      onChangeText={(text) => {
+                        setLastname(text);
+                        if (lastnameError) setLastnameError("");
+                      }}
                       className="flex-1 text-gray-800"
                     />
                   </View>
+                  {lastnameError ? <Text className="text-red-500 text-sm mt-1">{lastnameError}</Text> : null}
                 </View>
               </View>
 
@@ -193,12 +238,14 @@ export default function CreateAccountScreen() {
               <VerifyEmail
                 onValidEmail={setIsEmailValid}
                 setEmailGlobal={setEmail}
+                emailError={emailError}
+                setEmailError={setEmailError}
               />
 
               {/* Password */}
               <View className="mb-6">
                 <Text className="mb-2 font-medium text-gray-700">Password</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+                <View className={`flex-row items-center border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
                   <FontAwesome name="lock" size={18} color="#9CA3AF" className="mr-3" />
                   <TextInput
                     placeholder="Enter your password"
@@ -217,6 +264,7 @@ export default function CreateAccountScreen() {
                     />
                   </TouchableOpacity>
                 </View>
+                {passwordError ? <Text className="text-red-500 text-sm mt-1">{passwordError}</Text> : null}
 
                 {/* Password Requirements */}
                 <View className="mt-2 px-2">
@@ -242,7 +290,7 @@ export default function CreateAccountScreen() {
               {/* Continue Button */}
               <TouchableOpacity
                 onPress={handleContinue}
-                disabled={!isFormComplete || loading}
+                disabled={loading}
                 className="overflow-hidden rounded-lg"
               >
                 <LinearGradient
@@ -250,13 +298,13 @@ export default function CreateAccountScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   className="py-4 items-center"
-                  style={{ opacity: isFormComplete && !loading ? 1 : 0.6 }}
+                  style={{ opacity: loading ? 0.6 : 1 }}
                 >
                   {loading ? (
                     <View className="flex-row items-center">
-                      <ActivityIndicator color="black" className="mr-2" />
+                      <ActivityIndicator color="black" style={{ marginRight: 8 }} />
                       <Text className="text-black font-semibold text-lg">
-                        Creating account...
+                        Creating Account...
                       </Text>
                     </View>
                   ) : (
@@ -269,20 +317,15 @@ export default function CreateAccountScreen() {
             </View>
 
             {/* Login Link */}
-            <View className="flex-row justify-center items-center mt-4">
-              <Text className="text-gray-600">
-                Already have an account?{" "}
-              </Text>
+            <View className="flex-row justify-center items-center">
+              <Text className="text-gray-600">Already have an account? </Text>
               <Link href="/login">
-                <Text className="font-bold text-yellow-600">
-                  Login
-                </Text>
+                <Text className="font-bold text-yellow-600">Sign In</Text>
               </Link>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
       <Toast />
     </SafeAreaView>
   );

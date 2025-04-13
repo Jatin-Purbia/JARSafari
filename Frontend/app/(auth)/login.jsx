@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
@@ -22,6 +23,8 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
   const dispatch = useDispatch();
   const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
@@ -37,34 +40,43 @@ export default function LoginScreen() {
       });
       dispatch(clearError());
     }
-  }, [error]);
+  }, [error, dispatch]);
 
   useEffect(() => {
     if (isAuthenticated) {
       router.replace("/Homepage");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
+
+  const validateForm = () => {
+    let isValid = true;
+    
+    // Validate email
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!isValidEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+    
+    // Validate password
+    if (!password.trim()) {
+      setPasswordError("Password is required");
+      isValid = false;
+    } else {
+      setPasswordError("");
+    }
+    
+    return isValid;
+  };
 
   const handleContinue = () => {
-    if (!isValidEmail(email)) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Email",
-        text2: "Please enter a valid email address.",
-      });
-      return;
+    if (validateForm()) {
+      dispatch(login({ email, password }));
     }
-
-    if (!password.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Empty Password",
-        text2: "Password cannot be empty.",
-      });
-      return;
-    }
-
-    dispatch(login({ email, password }));
   };
 
   return (
@@ -93,29 +105,36 @@ export default function LoginScreen() {
             {/* Email Input */}
             <View className="w-full mb-4">
               <Text className="mb-2 font-medium text-gray-700">Email</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+              <View className={`flex-row items-center border ${emailError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
                 <FontAwesome name="envelope" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
                 <TextInput
                   placeholder="Enter your email"
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (emailError) setEmailError("");
+                  }}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   className="flex-1 text-gray-800"
                 />
               </View>
+              {emailError ? <Text className="text-red-500 text-sm mt-1">{emailError}</Text> : null}
             </View>
 
             {/* Password Input */}
             <View className="w-full mb-6">
               <Text className="mb-2 font-medium text-gray-700">Password</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg px-4 py-3 bg-gray-50">
+              <View className={`flex-row items-center border ${passwordError ? 'border-red-500' : 'border-gray-300'} rounded-lg px-4 py-3 bg-gray-50`}>
                 <FontAwesome name="lock" size={18} color="#9CA3AF" style={{ marginRight: 10 }} />
                 <TextInput
                   placeholder="Enter your password"
                   secureTextEntry={!passwordVisible}
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (passwordError) setPasswordError("");
+                  }}
                   className="flex-1 text-gray-800"
                 />
                 <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
@@ -126,12 +145,13 @@ export default function LoginScreen() {
                   />
                 </TouchableOpacity>
               </View>
+              {passwordError ? <Text className="text-red-500 text-sm mt-1">{passwordError}</Text> : null}
             </View>
 
             {/* Submit Button */}
             <TouchableOpacity
               onPress={handleContinue}
-              disabled={loading || !email.trim() || !password.trim()}
+              disabled={loading}
               className="w-full overflow-hidden rounded-lg mb-4"
             >
               <LinearGradient
@@ -139,7 +159,7 @@ export default function LoginScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 className="py-4 items-center"
-                style={{ opacity: (loading || !email.trim() || !password.trim()) ? 0.6 : 1 }}
+                style={{ opacity: loading ? 0.6 : 1 }}
               >
                 {loading ? (
                   <View className="flex-row items-center">

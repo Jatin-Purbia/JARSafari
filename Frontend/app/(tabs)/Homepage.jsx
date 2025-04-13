@@ -6,46 +6,59 @@ import {
   TouchableOpacity,
   ScrollView,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  Dimensions,
+  Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 
-// Hardcoded locations for autocomplete
-const locations = [
-  "Old Mess", "New Mess", "Sports Complex", "Lecture Hall", 
-  "Library", "Ground", "Shamiyana", "Hostel", "Cafeteria",
-  "Auditorium", "Parking Lot", "Admin Block", "Medical Center",
-  "Gymnasium", "Swimming Pool", "Tennis Court", "Basketball Court"
-];
+// Import location data from the data file
+import { 
+  locations, 
+  campusGraph, 
+  locationCoordinates,
+  getLocationType,
+  getLocationIcon
+} from '../data/locationData';
 
 // Time-based recommendations
 const timeBasedRecommendations = {
   morning: [
     { icon: "restaurant", label: "Old Mess", lib: MaterialIcons },
     { icon: "restaurant", label: "New Mess", lib: MaterialIcons },
-    { icon: "dumbbell", label: "Sports Complex", lib: FontAwesome5 },
-    { icon: "school", label: "Lecture Hall", lib: Ionicons },
+    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "school", label: "Lecture Hall", lib: MaterialIcons },
+    { icon: "local-library", label: "Library", lib: MaterialIcons },
+    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
   ],
   afternoon: [
     { icon: "restaurant", label: "Mess", lib: MaterialIcons },
-    { icon: "library", label: "Library", lib: MaterialIcons },
-    { icon: "dumbbell", label: "Sports Complex", lib: FontAwesome5 },
+    { icon: "local-library", label: "Library", lib: MaterialIcons },
+    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
     { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
+    { icon: "school", label: "Lecture Hall", lib: MaterialIcons },
+    { icon: "admin-panel-settings", label: "Admin Block", lib: MaterialIcons },
   ],
   evening: [
     { icon: "restaurant", label: "Mess", lib: MaterialIcons },
     { icon: "sports-soccer", label: "Ground", lib: MaterialIcons },
-    { icon: "library", label: "Library", lib: MaterialIcons },
+    { icon: "local-library", label: "Library", lib: MaterialIcons },
     { icon: "umbrella", label: "Shamiyana", lib: MaterialIcons },
+    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
+    { icon: "sports-basketball", label: "Basketball Court", lib: MaterialIcons },
   ],
   night: [
     { icon: "restaurant", label: "Mess", lib: MaterialIcons },
     { icon: "nightlight", label: "Ground", lib: MaterialIcons },
     { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
-    { icon: "home", label: "Hostel", lib: Ionicons },
+    { icon: "home", label: "Hostel", lib: MaterialIcons },
+    { icon: "medical-services", label: "Medical Center", lib: MaterialIcons },
+    { icon: "fitness-center", label: "Gymnasium", lib: MaterialIcons },
   ]
 };
 
@@ -75,6 +88,7 @@ class Trie {
   // Insert a word into the trie
   insert(word, metadata = {}) {
     let node = this.root;
+    if (!word || typeof word !== 'string') return;
     const lowerWord = word.toLowerCase();
     
     for (let char of lowerWord) {
@@ -92,6 +106,7 @@ class Trie {
   // Search for words with the given prefix
   search(prefix, limit = 10) {
     let node = this.root;
+    if (!prefix || typeof prefix !== 'string') return [];
     const lowerPrefix = prefix.toLowerCase();
     
     // Navigate to the node representing the prefix
@@ -111,80 +126,40 @@ class Trie {
       .slice(0, limit)
       .map(item => item.word);
   }
-
-  // Find all words starting from a given node
+  
+  // Helper method to find all words with a given prefix
   _findAllWords(node, prefix) {
-    let results = [];
+    const results = [];
     
-    // If this is a complete word, add it to results
     if (node.isEndOfWord) {
-      results.push({ 
-        word: prefix, 
-        frequency: node.frequency,
-        metadata: node.metadata
-      });
+      results.push({ word: prefix, frequency: node.frequency });
     }
     
-    // Recursively find all words in child nodes
-    for (let char in node.children) {
-      results = results.concat(
-        this._findAllWords(node.children[char], prefix + char)
-      );
+    for (const char in node.children) {
+      const childResults = this._findAllWords(node.children[char], prefix + char);
+      results.push(...childResults);
     }
     
     return results;
   }
-
-  // Fuzzy search - find words that are similar to the query
-  fuzzySearch(query, limit = 5) {
+  
+  // Fuzzy search with Levenshtein distance
+  fuzzySearch(query, limit = 10) {
+    if (!query || typeof query !== 'string') return [];
+    
     const results = [];
     const lowerQuery = query.toLowerCase();
     
-    // Helper function to calculate Levenshtein distance
-    const levenshteinDistance = (a, b) => {
-      if (a.length === 0) return b.length;
-      if (b.length === 0) return a.length;
-      
-      const matrix = Array(b.length + 1).fill(null).map(() => 
-        Array(a.length + 1).fill(null)
-      );
-      
-      for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
-      for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
-      
-      for (let j = 1; j <= b.length; j++) {
-        for (let i = 1; i <= a.length; i++) {
-          const substitutionCost = a[i - 1] === b[j - 1] ? 0 : 1;
-          matrix[j][i] = Math.min(
-            matrix[j][i - 1] + 1, // deletion
-            matrix[j - 1][i] + 1, // insertion
-            matrix[j - 1][i - 1] + substitutionCost // substitution
-          );
-        }
-      }
-      
-      return matrix[b.length][a.length];
-    };
-    
     // Get all words from the trie
-    const getAllWords = (node, prefix = '') => {
-      let words = [];
-      if (node.isEndOfWord) {
-        words.push(prefix);
-      }
-      for (let char in node.children) {
-        words = words.concat(getAllWords(node.children[char], prefix + char));
-      }
-      return words;
-    };
+    const allWords = this._getAllWords(this.root, '');
     
-    const allWords = getAllWords(this.root);
-    
-    // Calculate distance for each word and sort by distance
+    // Calculate Levenshtein distance for each word
     allWords.forEach(word => {
-      const distance = levenshteinDistance(lowerQuery, word.toLowerCase());
-      if (distance <= 3) { // Only include words with distance <= 3
-        results.push({ word, distance });
+      if (typeof word === 'string') {
+        const distance = levenshteinDistance(lowerQuery, word.toLowerCase());
+        if (distance <= 3) { // Only include words with distance <= 3
+          results.push({ word, distance });
+        }
       }
     });
     
@@ -194,60 +169,67 @@ class Trie {
       .slice(0, limit)
       .map(item => item.word);
   }
+  
+  // Helper method to get all words from the trie
+  _getAllWords(node, prefix) {
+    const words = [];
+    
+    if (node.isEndOfWord) {
+      words.push(prefix);
+    }
+    
+    for (const char in node.children) {
+      const childWords = this._getAllWords(node.children[char], prefix + char);
+      words.push(...childWords);
+    }
+    
+    return words;
+  }
+}
+
+// Levenshtein distance implementation
+function levenshteinDistance(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+  
+  const matrix = [];
+  
+  // Initialize matrix
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill in the rest of the matrix
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  
+  return matrix[b.length][a.length];
 }
 
 export default function Homepage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState("morning");
   const [userName, setUserName] = useState("Sharan");
-  const [isLoading, setIsLoading] = useState(false);
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationPermission, setLocationPermission] = useState(false);
+  const [actualTimeOfDay, setActualTimeOfDay] = useState("morning");
   
-  // Initialize the trie with locations
-  const [trie] = useState(() => {
-    const trie = new Trie();
-    locations.forEach(location => {
-      // Add metadata for each location
-      const metadata = {
-        type: getLocationType(location),
-        icon: getLocationIcon(location)
-      };
-      trie.insert(location, metadata);
-    });
-    return trie;
-  });
-
-  // Helper function to determine location type
-  function getLocationType(location) {
-    const lowerLocation = location.toLowerCase();
-    if (lowerLocation.includes('mess')) return 'dining';
-    if (lowerLocation.includes('library')) return 'academic';
-    if (lowerLocation.includes('hall')) return 'academic';
-    if (lowerLocation.includes('ground') || lowerLocation.includes('court')) return 'sports';
-    if (lowerLocation.includes('hostel')) return 'residential';
-    if (lowerLocation.includes('medical')) return 'health';
-    if (lowerLocation.includes('parking')) return 'transport';
-    if (lowerLocation.includes('cafeteria')) return 'dining';
-    return 'other';
-  }
-
-  // Helper function to get icon for location
-  function getLocationIcon(location) {
-    const lowerLocation = location.toLowerCase();
-    if (lowerLocation.includes('mess')) return 'restaurant';
-    if (lowerLocation.includes('library')) return 'library';
-    if (lowerLocation.includes('hall')) return 'school';
-    if (lowerLocation.includes('ground')) return 'sports-soccer';
-    if (lowerLocation.includes('court')) return 'sports';
-    if (lowerLocation.includes('hostel')) return 'home';
-    if (lowerLocation.includes('medical')) return 'medkit';
-    if (lowerLocation.includes('parking')) return 'car';
-    if (lowerLocation.includes('cafeteria')) return 'local-cafe';
-    return 'place';
-  }
-
   // Determine time of day
   useEffect(() => {
     const determineTimeOfDay = () => {
@@ -258,50 +240,27 @@ export default function Homepage() {
       return "night";
     };
     
-    setTimeOfDay(determineTimeOfDay());
+    const actualTime = determineTimeOfDay();
+    setActualTimeOfDay(actualTime);
+    setTimeOfDay(actualTime);
   }, []);
 
-  // Handle search input with debounce
-  const handleSearch = (text) => {
-    setSearchQuery(text);
-    
-    if (text.length > 0) {
-      setIsLoading(true);
+  // Request location permission
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
       
-      // Simulate network delay for better UX
-      setTimeout(() => {
-        // First try exact prefix match
-        let results = trie.search(text);
-        
-        // If not enough results, try fuzzy search
-        if (results.length < 3 && text.length > 2) {
-          const fuzzyResults = trie.fuzzySearch(text);
-          // Combine results, removing duplicates
-          results = [...new Set([...results, ...fuzzyResults])];
-        }
-        
-        setSuggestions(results);
-        setShowSuggestions(true);
-        setIsLoading(false);
-      }, 300);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  // Select a suggestion
-  const selectSuggestion = (suggestion) => {
-    setSearchQuery(suggestion);
-    setShowSuggestions(false);
-    
-    // Update frequency in trie
-    trie.insert(suggestion);
-  };
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        setUserLocation(location);
+      }
+    })();
+  }, []);
 
   // Get greeting based on time of day
   const getGreeting = () => {
-    switch (timeOfDay) {
+    switch (actualTimeOfDay) {
       case "morning": return "Good Morning";
       case "afternoon": return "Good Afternoon";
       case "evening": return "Good Evening";
@@ -310,15 +269,29 @@ export default function Homepage() {
     }
   };
 
-  // Render suggestion item
-  const renderSuggestionItem = ({ item }) => (
-    <TouchableOpacity 
-      className="px-4 py-3 border-b border-gray-100"
-      onPress={() => selectSuggestion(item)}
-    >
-      <Text className="text-gray-800">{item}</Text>
-    </TouchableOpacity>
-  );
+  // Handle time selection
+  const handleTimeSelection = (time) => {
+    setTimeOfDay(time);
+    setShowTimeDropdown(false);
+  };
+
+  // Handle location selection
+  const handleLocationPress = (location) => {
+    router.push({
+      pathname: "/Mapscreen",
+      params: { destination: location }
+    });
+  };
+
+  // Handle Plan a Trip button press
+  const handlePlanTripPress = () => {
+    router.push("/ComingSoon");
+  };
+
+  // Handle Explore Locations button press
+  const handleExploreLocationsPress = () => {
+    router.push("/Locations");
+  };
 
   // Render recommendation item
   const renderRecommendationItem = ({ item, index }) => {
@@ -326,8 +299,8 @@ export default function Homepage() {
     return (
       <TouchableOpacity 
         key={index}
-        className="mr-4 items-center"
-        onPress={() => router.push("/Mapscreen")}
+        className="items-center justify-center mx-2"
+        onPress={() => handleLocationPress(item.label)}
       >
         <View className="bg-yellow-100 rounded-full p-4 mb-2 shadow-sm">
           <IconLib name={item.icon} size={24} color="#F59E0B" />
@@ -337,79 +310,111 @@ export default function Homepage() {
     );
   };
 
+  // Render time dropdown item
+  const renderTimeDropdownItem = ({ item }) => (
+    <TouchableOpacity 
+      className="px-4 py-3 border-b border-gray-100"
+      onPress={() => handleTimeSelection(item)}
+    >
+      <Text className="text-gray-800 capitalize">{item}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1">
-        {/* Search Bar - Outside of ScrollView */}
-        <View className="px-6 py-4">
-          <View className="relative">
-            <View className="flex-row items-center bg-white border border-gray-300 rounded-2xl px-3 py-2 shadow-sm">
-              <Ionicons name="search" size={24} color="#999" />
-              <TextInput
-                placeholder="Search for a location..."
-                className="ml-3 flex-1 text-base text-black"
-                placeholderTextColor="#999"
-                value={searchQuery}
-                onChangeText={handleSearch}
-                onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => {
-                  setSearchQuery("");
-                  setShowSuggestions(false);
-                }}>
-                  <Ionicons name="close-circle" size={20} color="#999" />
-                </TouchableOpacity>
-              )}
-            </View>
-            
-            {/* Suggestions Dropdown */}
-            {showSuggestions && (
-              <View className="absolute top-14 left-0 right-0 bg-white rounded-xl shadow-lg z-10 border border-gray-200">
-                {isLoading ? (
-                  <View className="p-4 items-center">
-                    <ActivityIndicator size="small" color="#F59E0B" />
-                  </View>
-                ) : suggestions.length > 0 ? (
-                  <FlatList
-                    data={suggestions}
-                    keyExtractor={(item) => item}
-                    renderItem={renderSuggestionItem}
-                    scrollEnabled={true}
-                    nestedScrollEnabled={true}
-                  />
-                ) : (
-                  <View className="p-4">
-                    <Text className="text-gray-500 text-center">No locations found</Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
-        </View>
-
         {/* Main Content - Using FlatList instead of ScrollView */}
         <FlatList
           data={[{ key: 'content' }]}
           renderItem={() => (
             <>
+              {/* Logo and App Name */}
+              <View className="items-center py-6">
+                <Image 
+                  source={require('../../assets/images/logo.png')} 
+                  className="w-24 h-24 mb-2"
+                  resizeMode="contain"
+                />
+                <Text className="text-2xl font-bold text-black mb-1">JAR Safari</Text>
+                <Text className="text-base text-gray-600 italic">
+                  "Your Campus Navigation Companion"
+                </Text>
+              </View>
+
               {/* Greeting */}
-              <View className="px-6">
-                <Text className="text-3xl font-bold text-black">
+              <View className="px-6 mb-4">
+                <Text className="text-2xl font-bold text-black">
                   {getGreeting()}, {userName}!
                 </Text>
                 
                 {/* Quote */}
-                <Text className="text-base text-gray-600 mt-2 mb-6 italic">
-                  "{travelQuotes[timeOfDay]}"
+                <Text className="text-base text-gray-600 mt-2 italic">
+                  "{travelQuotes[actualTimeOfDay]}"
                 </Text>
               </View>
 
-              {/* Time-based Recommendations */}
-              <View className="px-6 mb-6">
-                <Text className="text-lg font-semibold text-yellow-500 mb-3">
-                  {timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)} Recommendations
-                </Text>
+              {/* Explore Locations Button */}
+              {/* <View className="px-6 mb-6">
+                <TouchableOpacity
+                  onPress={handleExploreLocationsPress}
+                  className="overflow-hidden rounded-2xl shadow-md"
+                >
+                  <LinearGradient
+                    colors={['#FCD34D', '#F59E0B']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    className="py-4 items-center flex-row justify-center"
+                  >
+                    <Ionicons name="location" size={20} color="#000" />
+                    <Text className="text-black font-bold text-lg ml-2">Explore Locations</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>  */}
+
+              {/* Time Selection Dropdown */}
+              <View className="px-6 mb-4">
+                <TouchableOpacity 
+                  className="flex-row items-center justify-between bg-white border border-gray-300 rounded-xl px-4 py-3"
+                  onPress={() => setShowTimeDropdown(!showTimeDropdown)}
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="time-outline" size={20} color="#F59E0B" />
+                    <Text className="ml-2 text-black capitalize">{timeOfDay}</Text>
+                  </View>
+                  <Ionicons 
+                    name={showTimeDropdown ? "chevron-up" : "chevron-down"} 
+                    size={20} 
+                    color="#999" 
+                  />
+                </TouchableOpacity>
+                
+                {/* Time Dropdown Modal */}
+                {showTimeDropdown && (
+                  <View className="absolute top-14 left-6 right-6 bg-white rounded-xl shadow-lg z-10 border border-gray-200">
+                    <FlatList
+                      data={["morning", "afternoon", "evening", "night"]}
+                      keyExtractor={(item) => item}
+                      renderItem={renderTimeDropdownItem}
+                      scrollEnabled={true}
+                      nestedScrollEnabled={true}
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* Time-based Recommendations - Full Width */}
+              <View className="mb-6">
+                <View className="px-6 mb-3 flex-row justify-between items-center">
+                  <Text className="text-lg font-semibold text-yellow-500">
+                    {timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1)} Recommendations
+                  </Text>
+                  <TouchableOpacity 
+                    onPress={() => router.push("/Locations")}
+                    className="bg-yellow-100 px-3 py-1 rounded-full"
+                  >
+                    <Text className="text-xs text-yellow-800">View All Locations</Text>
+                  </TouchableOpacity>
+                </View>
                 
                 <FlatList
                   data={timeBasedRecommendations[timeOfDay]}
@@ -418,13 +423,14 @@ export default function Homepage() {
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   scrollEnabled={true}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
                 />
               </View>
 
               {/* Plan a Trip Button */}
               <View className="px-6 mb-6">
                 <TouchableOpacity
-                  onPress={() => router.push("/Mapscreen")}
+                  onPress={handlePlanTripPress}
                   className="overflow-hidden rounded-2xl shadow-md"
                 >
                   <LinearGradient
@@ -434,21 +440,9 @@ export default function Homepage() {
                     className="py-4 items-center"
                   >
                     <Text className="text-black font-bold text-lg">Plan a Trip</Text>
+                    <Text className="text-black text-sm mt-1">Coming Soon</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-              </View>
-
-              {/* Recent Routes */}
-              <View className="px-6 mb-6">
-                <Text className="text-lg font-semibold text-black mb-3">Recent Routes</Text>
-                <View className="bg-white border-l-4 border-black p-4 rounded-xl mb-3 shadow-sm">
-                  <Text className="text-black font-medium">Hostel → Lecture Hall</Text>
-                  <Text className="text-gray-600 text-sm">5 min</Text>
-                </View>
-                <View className="bg-white border-l-4 border-black p-4 rounded-xl shadow-sm">
-                  <Text className="text-black font-medium">Hostel → Library</Text>
-                  <Text className="text-gray-600 text-sm">12 min</Text>
-                </View>
               </View>
             </>
           )}
