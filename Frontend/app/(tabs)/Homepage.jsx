@@ -20,11 +20,11 @@ export default function Homepage() {
   const data = {
     Hostels: ["O4", "O3", "Y4", "Y3", "B1", "G6"],
     "Lecture Halls": ["LHC 101", "LHC 102", "LHC 201"],
-    Mess: ["Main Mess", "North Mess"],
-    Departments: ["Chem Engg", "CSE", "EE"],
+    Mess: ["NEW Mess", "OLD Mess"],
+    Departments: ["CH", "CSE", "EE", "ME" , "CI" , "BB", "AIDS"],
     "Sports Facilities": ["Football Ground", "Tennis Court", "Gym"],
     "Grocery Shops": ["Campus Mart", "Daily Needs"],
-    Cafes: ["Night Owl", "Cafe Coffee Day"]
+    Cafes: ["Shamiyana", "FNG Cafe"],
   };
 
   const allRecommendations = {
