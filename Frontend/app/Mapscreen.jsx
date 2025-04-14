@@ -4,66 +4,94 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import { WebView } from 'react-native-webview';
 
 // Import location data from the data file
 import { 
-  locations, 
-  campusGraph, 
   locationCoordinates,
-  IITJ_CENTER
+  IITJ_CENTER,
+  buildingMarkers,
+  campusGraph
 } from './data/locationData';
 
-// Dijkstra's algorithm implementation
-function dijkstra(graph, start, end) {
+// Helper function to find the shortest path using Dijkstra's algorithm
+const findShortestPath = (graph, start, end) => {
   const distances = {};
   const previous = {};
   const unvisited = new Set();
+  const visited = new Set();
 
   // Initialize distances
-  Object.keys(graph).forEach(location => {
-    distances[location] = Infinity;
-    unvisited.add(location);
+  Object.keys(graph).forEach(node => {
+    distances[node] = Infinity;
+    previous[node] = null;
+    unvisited.add(node);
   });
   distances[start] = 0;
 
   while (unvisited.size > 0) {
-    // Find unvisited location with minimum distance
+    // Find the node with the smallest distance
     let current = null;
-    let minDistance = Infinity;
-    unvisited.forEach(location => {
-      if (distances[location] < minDistance) {
-        minDistance = distances[location];
-        current = location;
+    let smallestDistance = Infinity;
+    unvisited.forEach(node => {
+      if (distances[node] < smallestDistance) {
+        smallestDistance = distances[node];
+        current = node;
       }
     });
 
     if (current === end) break;
+    if (current === null) break;
+
     unvisited.delete(current);
+    visited.add(current);
 
     // Update distances to neighbors
     Object.entries(graph[current]).forEach(([neighbor, distance]) => {
-      if (!unvisited.has(neighbor)) return;
-
-      const newDistance = distances[current] + distance;
-      if (newDistance < distances[neighbor]) {
-        distances[neighbor] = newDistance;
-        previous[neighbor] = current;
+      if (!visited.has(neighbor)) {
+        const newDistance = distances[current] + distance;
+        if (newDistance < distances[neighbor]) {
+          distances[neighbor] = newDistance;
+          previous[neighbor] = current;
+        }
       }
     });
   }
 
-  // Reconstruct path
+  // Build the path
   const path = [];
   let current = end;
-  while (current !== start) {
+  while (current !== null) {
     path.unshift(current);
     current = previous[current];
   }
-  path.unshift(start);
 
   return path;
-}
+};
+
+// Helper function to calculate intermediate points between two coordinates
+const calculateIntermediatePoints = (start, end, numPoints = 5) => {
+  const points = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const t = i / numPoints;
+    points.push({
+      latitude: start.latitude + (end.latitude - start.latitude) * t,
+      longitude: start.longitude + (end.longitude - start.longitude) * t
+    });
+  }
+  return points;
+};
+
+// Helper function to generate smooth path coordinates
+const generatePathCoordinates = (path, locationCoordinates) => {
+  const coordinates = [];
+  for (let i = 0; i < path.length - 1; i++) {
+    const start = locationCoordinates[path[i]];
+    const end = locationCoordinates[path[i + 1]];
+    const intermediatePoints = calculateIntermediatePoints(start, end);
+    coordinates.push(...intermediatePoints);
+  }
+  return coordinates;
+};
 
 export default function Mapscreen() {
   const params = useLocalSearchParams();
@@ -73,8 +101,9 @@ export default function Mapscreen() {
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showGoogleEarth, setShowGoogleEarth] = useState(false);
-  const [mapType, setMapType] = useState('standard');
+  const [mapType, setMapType] = useState('satellite');
+  const [showControls, setShowControls] = useState(true);
+  const [routeInfo, setRouteInfo] = useState(null);
 
   // Initialize location tracking
   useEffect(() => {
@@ -93,149 +122,65 @@ export default function Mapscreen() {
         // If destination is provided, calculate route
         if (params.destination) {
           const destination = params.destination;
-          const route = dijkstra(campusGraph, findNearestLocation(location.coords), destination);
-          setRouteCoordinates(route.map(loc => locationCoordinates[loc]));
+          
+          // Get destination coordinates
+          const destCoords = locationCoordinates[destination];
+          if (!destCoords) {
+            setError('Invalid destination location');
+            setIsLoading(false);
+            return;
+          }
+
+          // Get start location coordinates
+          const startLocation = params.userLatitude && params.userLongitude 
+            ? { coords: { latitude: parseFloat(params.userLatitude), longitude: parseFloat(params.userLongitude) } }
+            : location;
+
+          console.log('Start Location:', startLocation.coords);
+          console.log('Destination:', destCoords);
+
+          // Find the shortest path using Dijkstra's algorithm
+          const path = findShortestPath(campusGraph, params.fromLocation || 'Main Academic Block', destination);
+          
+          if (path.length > 0) {
+            // Generate smooth path coordinates
+            const coordinates = generatePathCoordinates(path, locationCoordinates);
+            setRouteCoordinates(coordinates);
+
+            // Calculate approximate distance and time
+            const totalDistance = path.length * 0.1; // Approximate distance in km
+            const walkingSpeed = 5; // km/h
+            const estimatedTime = Math.ceil((totalDistance / walkingSpeed) * 60); // minutes
+
+            setRouteInfo({
+              distance: `${totalDistance.toFixed(1)} km`,
+              duration: `${estimatedTime} minutes`,
+              steps: path.map((location, index) => ({
+                instruction: `Go to ${location}`,
+                distance: '0.1 km',
+                duration: '1 min'
+              }))
+            });
+
+            // Fit map to show the entire route with padding
+            if (mapRef.current) {
+              mapRef.current.fitToCoordinates(coordinates, {
+                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+                animated: true,
+              });
+            }
+          } else {
+            setError('Could not find a path to the destination');
+          }
         }
       } catch (err) {
-        setError('Error getting location: ' + err.message);
+        console.error('Error in Mapscreen:', err);
+        setError('Error getting location or calculating route: ' + err.message);
       } finally {
         setIsLoading(false);
       }
     })();
   }, [params.destination]);
-
-  // Find nearest location to user's coordinates
-  const findNearestLocation = (coords) => {
-    let nearest = null;
-    let minDistance = Infinity;
-
-    Object.entries(locationCoordinates).forEach(([location, coord]) => {
-      const distance = Math.sqrt(
-        Math.pow(coord.latitude - coords.latitude, 2) +
-        Math.pow(coord.longitude - coords.longitude, 2)
-      );
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = location;
-      }
-    });
-
-    return nearest;
-  };
-
-  // Generate Google Earth HTML
-  const generateGoogleEarthHTML = () => {
-    const destination = params.destination;
-    const destCoords = locationCoordinates[destination];
-    const userCoords = userLocation ? {
-      lat: userLocation.coords.latitude,
-      lng: userLocation.coords.longitude
-    } : null;
-
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            html, body, #map { height: 100%; margin: 0; padding: 0; }
-            #map { width: 100%; }
-            .loading {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              font-family: Arial, sans-serif;
-              color: #666;
-            }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <div id="loading" class="loading">Loading map...</div>
-          <script>
-            let map;
-            let markers = [];
-
-            function initMap() {
-              try {
-                map = new google.maps.Map(document.getElementById('map'), {
-                  center: { lat: ${destCoords.latitude}, lng: ${destCoords.longitude} },
-                  zoom: 18,
-                  mapTypeId: 'satellite',
-                  tilt: 45
-                });
-
-                // Add destination marker
-                markers.push(new google.maps.Marker({
-                  position: { lat: ${destCoords.latitude}, lng: ${destCoords.longitude} },
-                  map: map,
-                  title: '${destination}',
-                  icon: {
-                    url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-                  }
-                }));
-
-                ${userCoords ? `
-                  // Add user location marker
-                  markers.push(new google.maps.Marker({
-                    position: { lat: ${userCoords.lat}, lng: ${userCoords.lng} },
-                    map: map,
-                    title: 'You are here',
-                    icon: {
-                      url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-                    }
-                  }));
-                ` : ''}
-
-                // Add 3D buildings
-                const buildings = ${JSON.stringify(Object.entries(locationCoordinates).map(([name, coords]) => ({
-                  name,
-                  position: { lat: coords.latitude, lng: coords.longitude }
-                })))};
-
-                buildings.forEach(building => {
-                  markers.push(new google.maps.Marker({
-                    position: building.position,
-                    map: map,
-                    title: building.name,
-                    icon: {
-                      url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                    }
-                  }));
-                });
-
-                // Hide loading message
-                document.getElementById('loading').style.display = 'none';
-              } catch (error) {
-                console.error('Error initializing map:', error);
-                document.getElementById('loading').textContent = 'Error loading map: ' + error.message;
-              }
-            }
-
-            function handleMapError() {
-              document.getElementById('loading').textContent = 'Error loading Google Maps. Please check your internet connection.';
-            }
-          </script>
-          <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap"
-            onerror="handleMapError()">
-          </script>
-        </body>
-      </html>
-    `;
-  };
-
-  // Fit map to show entire route
-  const fitMapToRoute = () => {
-    if (mapRef.current && routeCoordinates.length > 0) {
-      mapRef.current.fitToCoordinates(routeCoordinates, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -261,96 +206,107 @@ export default function Mapscreen() {
 
   return (
     <View style={styles.container}>
-      {showGoogleEarth ? (
-        <WebView
-          source={{ html: generateGoogleEarthHTML() }}
-          style={styles.map}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            setError('WebView error: ' + nativeEvent.description);
-          }}
-          onLoadEnd={() => {
-            // Handle WebView load completion
-            setIsLoading(false);
-          }}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          scalesPageToFit={true}
-          onNavigationStateChange={(navState) => {
-            // Handle navigation state changes
-            if (navState.url !== 'about:blank') {
-              setError('Navigation error: ' + navState.url);
-            }
-          }}
-        />
-      ) : (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={{
-            ...IITJ_CENTER,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          mapType={mapType}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-          onMapReady={fitMapToRoute}
-        >
-          {/* User Location Marker */}
-          {userLocation && (
-            <Marker
-              coordinate={{
-                latitude: userLocation.coords.latitude,
-                longitude: userLocation.coords.longitude,
-              }}
-              title="You are here"
-            >
-              <View style={styles.userMarker}>
-                <View style={styles.userMarkerDot} />
-              </View>
-            </Marker>
-          )}
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={{
+          ...IITJ_CENTER,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        mapType={mapType}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        pitchEnabled={true}
+        rotateEnabled={true}
+        showsBuildings={true}
+        showsIndoors={true}
+        showsTraffic={false}
+        showsCompass={true}
+        showsScale={true}
+        onPress={() => setShowControls(!showControls)}
+      >
+        {/* User Location Marker */}
+        {userLocation && (
+          <Marker
+            coordinate={{
+              latitude: userLocation.coords.latitude,
+              longitude: userLocation.coords.longitude,
+            }}
+            title="You are here"
+          >
+            <View style={styles.userMarker}>
+              <View style={styles.userMarkerDot} />
+            </View>
+          </Marker>
+        )}
 
-          {/* Destination Marker */}
-          {params.destination && (
-            <Marker
-              coordinate={locationCoordinates[params.destination]}
-              title={params.destination}
-            >
-              <View style={styles.destinationMarker}>
-                <Ionicons name="location" size={24} color="#F59E0B" />
-              </View>
-            </Marker>
-          )}
+        {/* Destination Marker */}
+        {params.destination && (
+          <Marker
+            coordinate={locationCoordinates[params.destination]}
+            title={params.destination}
+          >
+            <View style={styles.destinationMarker}>
+              <Ionicons name="location" size={24} color="#F59E0B" />
+            </View>
+          </Marker>
+        )}
 
-          {/* Route Line */}
-          {routeCoordinates.length > 0 && (
-            <Polyline
-              coordinates={routeCoordinates}
-              strokeColor="#F59E0B"
-              strokeWidth={3}
-            />
-          )}
-        </MapView>
+        {/* Route Line */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#F59E0B"
+            strokeWidth={5}
+            lineDashPattern={[1]}
+            geodesic={true}
+          />
+        )}
+
+        {/* Building Markers */}
+        {buildingMarkers.map((building, index) => (
+          <Marker
+            key={index}
+            coordinate={{
+              latitude: building.position.lat,
+              longitude: building.position.lng,
+            }}
+            title={building.name}
+          >
+            <View style={styles.buildingMarker}>
+              <Ionicons name="business" size={16} color="#F59E0B" />
+            </View>
+          </Marker>
+        ))}
+      </MapView>
+
+      {/* Route Information */}
+      {routeInfo && (
+        <View style={styles.routeInfo}>
+          <View style={styles.routeInfoHeader}>
+            <Text style={styles.routeInfoTitle}>Route Information</Text>
+            <TouchableOpacity onPress={() => setShowControls(!showControls)}>
+              <Ionicons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.routeInfoContent}>
+            <View style={styles.routeInfoItem}>
+              <Ionicons name="walk" size={20} color="#F59E0B" />
+              <Text style={styles.routeInfoText}>{routeInfo.distance}</Text>
+            </View>
+            <View style={styles.routeInfoItem}>
+              <Ionicons name="time" size={20} color="#F59E0B" />
+              <Text style={styles.routeInfoText}>{routeInfo.duration}</Text>
+            </View>
+          </View>
+        </View>
       )}
 
       {/* Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={() => setShowGoogleEarth(!showGoogleEarth)}
-        >
-          <Ionicons 
-            name={showGoogleEarth ? "map" : "earth"} 
-            size={24} 
-            color="#000" 
-          />
-        </TouchableOpacity>
-
-        {!showGoogleEarth && (
+      {showControls && (
+        <View style={styles.controls}>
           <TouchableOpacity
             style={styles.controlButton}
             onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}
@@ -361,16 +317,15 @@ export default function Mapscreen() {
               color="#000" 
             />
           </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Back Button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="arrow-back" size={24} color="#000" />
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -385,86 +340,110 @@ const styles = StyleSheet.create({
   },
   controls: {
     position: 'absolute',
-    top: 50,
+    top: 20,
     right: 20,
     flexDirection: 'column',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 5,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   controlButton: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 20,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    padding: 8,
   },
   userMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4285F4',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  userMarkerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'white',
+    position: 'absolute',
+    top: 6,
+    left: 6,
+  },
+  destinationMarker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+  },
+  buildingMarker: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#F59E0B',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  userMarkerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#F59E0B',
-  },
-  destinationMarker: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+  routeInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 15,
+    elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+  },
+  routeInfoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  routeInfoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  routeInfoContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  routeInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  routeInfoText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#000',
   },
   errorText: {
     color: 'red',
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 20,
+    margin: 20,
   },
   button: {
     backgroundColor: '#F59E0B',
     padding: 15,
     borderRadius: 10,
-    marginHorizontal: 20,
+    margin: 20,
   },
   buttonText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
     textAlign: 'center',
     fontWeight: 'bold',

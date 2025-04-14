@@ -95,11 +95,11 @@ export default function Locations() {
           <Text className="text-sm text-gray-500 capitalize mb-1">
             {type}
           </Text>
-          {coordinates && (
+          {/* {coordinates && (
             <Text className="text-xs text-gray-400 text-center">
               {coordinates.latitude.toFixed(2)}, {coordinates.longitude.toFixed(2)}
             </Text>
-          )}
+          )} */}
         </View>
       </TouchableOpacity>
     );

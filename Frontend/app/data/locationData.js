@@ -1,90 +1,155 @@
 // All campus locations
 export const locations = [
-  "Old Mess", "New Mess", "Sports Complex", "Lecture Hall", 
-  "Library", "Ground", "Shamiyana", "Hostel", "Cafeteria",
-  "Auditorium", "Parking Lot", "Admin Block", "Medical Center",
-  "Gymnasium", "Swimming Pool", "Tennis Court", "Basketball Court",
-  "Hostel A", "Hostel B", "Hostel C", "Hostel D", "Academic Block",
-  "Main Gate"
+  "Office of Director", "Knowledge Tree", "Central Library", "Director Residence",
+  "IIT Jodhpur Museum", "Lecture Hall Complex", "Mechanical Engineering Department",
+  "Electrical Engineering Department", "Computer Science Department",
+  "Bioscience & Bioengineering Department", "Chemical Engineering Department",
+  "Civil & Infrastructure Engineering Dept", "Metallurgical & Materials Engg. Dept",
+  "Physics Department", "Chemistry Department", "Mathematics Department",
+  "Humanities & Social Sciences Dept", "Basic Laboratory", "Computer Center",
+  "Administration Block", "Student Activity Center", "Hostel I3", "Hostel I2",
+  "Medical Center", "Sports Complex", "Cricket Ground", "Volleyball Court",
+  "Football Field", "Basketball Court", "Tennis Court", "Badminton Court",
+  "Hockey Field", "Canara Bank Atm", "Shiv Mandir", "Old Mess", "New Mess",
+  "Canteen", "Fresh N Green", "Main Entrance Gate"
 ];
 
 // Campus graph representation for Dijkstra's algorithm
 export const campusGraph = {
-  "Hostel A": { "Academic Block": 5, "Cafeteria": 3, "Library": 7 },
-  "Hostel B": { "Academic Block": 6, "Cafeteria": 4, "Library": 8 },
-  "Academic Block": { "Hostel A": 5, "Hostel B": 6, "Library": 2, "Cafeteria": 4 },
-  "Library": { "Hostel A": 7, "Hostel B": 8, "Cafeteria": 3, "Sports Complex": 6 },
-  "Cafeteria": { "Hostel A": 3, "Hostel B": 4, "Academic Block": 4, "Library": 3, "Sports Complex": 5 },
-  "Sports Complex": { "Library": 6, "Cafeteria": 5, "Medical Center": 4 },
-  "Medical Center": { "Sports Complex": 4, "Hostel C": 3 },
-  "Hostel C": { "Medical Center": 3, "Hostel D": 2 },
-  "Hostel D": { "Hostel C": 2, "Parking Lot": 4 },
-  "Parking Lot": { "Hostel D": 4, "Main Gate": 3 },
-  "Main Gate": { "Parking Lot": 3, "Auditorium": 5 },
-  "Auditorium": { "Main Gate": 5, "Academic Block": 6 },
-  "Old Mess": { "Hostel A": 3, "Hostel B": 4 },
-  "New Mess": { "Hostel C": 3, "Hostel D": 4 },
-  "Lecture Hall": { "Academic Block": 2, "Library": 3 },
-  "Ground": { "Sports Complex": 2, "Basketball Court": 3 },
-  "Shamiyana": { "Ground": 2, "Sports Complex": 3 },
-  "Hostel": { "Hostel A": 1, "Hostel B": 1, "Hostel C": 1, "Hostel D": 1 },
-  "Admin Block": { "Academic Block": 3, "Library": 4 },
-  "Gymnasium": { "Sports Complex": 2, "Swimming Pool": 3 },
-  "Swimming Pool": { "Gymnasium": 3, "Tennis Court": 2 },
-  "Tennis Court": { "Swimming Pool": 2, "Basketball Court": 3 },
-  "Basketball Court": { "Tennis Court": 3, "Ground": 3 }
+  "Office of Director": { "Knowledge Tree": 1, "Central Library": 1, "Director Residence": 1 },
+  "Knowledge Tree": { "Office of Director": 1, "Central Library": 1, "IIT Jodhpur Museum": 2 },
+  "Central Library": { "Office of Director": 1, "Knowledge Tree": 1, "Computer Center": 1 },
+  "Director Residence": { "Office of Director": 1 },
+  "IIT Jodhpur Museum": { "Knowledge Tree": 2 },
+  
+  "Lecture Hall Complex": { "Computer Science Department": 1, "Basic Laboratory": 1 },
+  
+  "Mechanical Engineering Department": { "Electrical Engineering Department": 1, "Chemical Engineering Department": 1 },
+  "Electrical Engineering Department": { "Mechanical Engineering Department": 1, "Computer Science Department": 1 },
+  "Computer Science Department": { "Electrical Engineering Department": 1, "Lecture Hall Complex": 1, "Bioscience & Bioengineering Department": 1 },
+  "Bioscience & Bioengineering Department": { "Computer Science Department": 1, "Chemistry Department": 1 },
+  "Chemical Engineering Department": { "Mechanical Engineering Department": 1, "Civil & Infrastructure Engineering Dept": 1 },
+  "Civil & Infrastructure Engineering Dept": { "Chemical Engineering Department": 1, "Metallurgical & Materials Engg. Dept": 1 },
+  "Metallurgical & Materials Engg. Dept": { "Civil & Infrastructure Engineering Dept": 1, "Physics Department": 1 },
+  "Physics Department": { "Metallurgical & Materials Engg. Dept": 1, "Mathematics Department": 1 },
+  "Chemistry Department": { "Bioscience & Bioengineering Department": 1, "Basic Laboratory": 1 },
+  "Mathematics Department": { "Physics Department": 1, "Humanities & Social Sciences Dept": 1 },
+  "Humanities & Social Sciences Dept": { "Mathematics Department": 1 },
+  "Basic Laboratory": { "Lecture Hall Complex": 1, "Chemistry Department": 1 },
+  "Computer Center": { "Central Library": 1 },
+  
+  "Administration Block": { "Student Activity Center": 1 },
+  "Student Activity Center": { "Administration Block": 1 },
+  
+  "Hostel I3": { "Hostel I2": 1, "Old Mess": 1 },
+  "Hostel I2": { "Hostel I3": 1, "New Mess": 1 },
+  
+  "Medical Center": { "Sports Complex": 1 },
+  
+  "Sports Complex": { "Medical Center": 1, "Cricket Ground": 2, "Volleyball Court": 1, "Football Field": 1, "Basketball Court": 1, "Tennis Court": 1, "Badminton Court": 1, "Hockey Field": 1 },
+  "Cricket Ground": { "Sports Complex": 2 },
+  "Volleyball Court": { "Sports Complex": 1 },
+  "Football Field": { "Sports Complex": 1 },
+  "Basketball Court": { "Sports Complex": 1 },
+  "Tennis Court": { "Sports Complex": 1 },
+  "Badminton Court": { "Sports Complex": 1 },
+  "Hockey Field": { "Sports Complex": 1 },
+  
+  "Canara Bank Atm": { "Office of Director": 1 },
+  "Shiv Mandir": {},
+  
+  "Old Mess": { "Hostel I3": 1, "Canteen": 1 },
+  "New Mess": { "Hostel I2": 1 },
+  "Canteen": { "Old Mess": 1 },
+  
+  "Fresh N Green": { "Main Entrance Gate": 1 },
+  "Main Entrance Gate": { "Fresh N Green": 1 }
 };
 
 // Location coordinates for IITJ
 export const locationCoordinates = {
-  "Hostel A": { latitude: 26.1799, longitude: 73.1159 },
-  "Hostel B": { latitude: 26.1801, longitude: 73.1161 },
-  "Academic Block": { latitude: 26.1803, longitude: 73.1163 },
-  "Library": { latitude: 26.1805, longitude: 73.1165 },
-  "Cafeteria": { latitude: 26.1807, longitude: 73.1167 },
-  "Sports Complex": { latitude: 26.1809, longitude: 73.1169 },
-  "Medical Center": { latitude: 26.1811, longitude: 73.1171 },
-  "Hostel C": { latitude: 26.1813, longitude: 73.1173 },
-  "Hostel D": { latitude: 26.1815, longitude: 73.1175 },
-  "Parking Lot": { latitude: 26.1817, longitude: 73.1177 },
-  "Main Gate": { latitude: 26.1819, longitude: 73.1179 },
-  "Auditorium": { latitude: 26.1821, longitude: 73.1181 },
-  "Old Mess": { latitude: 26.1823, longitude: 73.1183 },
-  "New Mess": { latitude: 26.1825, longitude: 73.1185 },
-  "Lecture Hall": { latitude: 26.1827, longitude: 73.1187 },
-  "Ground": { latitude: 26.1829, longitude: 73.1189 },
-  "Shamiyana": { latitude: 26.1831, longitude: 73.1191 },
-  "Hostel": { latitude: 26.1833, longitude: 73.1193 },
-  "Admin Block": { latitude: 26.1835, longitude: 73.1195 },
-  "Gymnasium": { latitude: 26.1837, longitude: 73.1197 },
-  "Swimming Pool": { latitude: 26.1839, longitude: 73.1199 },
-  "Tennis Court": { latitude: 26.1841, longitude: 73.1201 },
-  "Basketball Court": { latitude: 26.1843, longitude: 73.1203 }
+  "Office of Director": { latitude: 26.47117, longitude: 73.11308 },
+  "Knowledge Tree": { latitude: 26.47046, longitude: 73.11367 },
+  "Central Library": { latitude: 26.47157, longitude: 73.11356 },
+  "Director Residence": { latitude: 26.47114, longitude: 73.11208 },
+  "IIT Jodhpur Museum": { latitude: 26.47054, longitude: 73.11594 },
+
+  "Lecture Hall Complex": { latitude: 26.47297, longitude: 73.11407 },
+  
+  // departments
+  "Mechanical Engineering Department": { latitude: 26.47909, longitude: 73.11663 },
+  "Electrical Engineering Department": { latitude: 26.47932, longitude: 73.11607 },
+  "Computer Science Department": { latitude: 26.47499, longitude: 73.11444 },
+  "Bioscience & Bioengineering Department": { latitude: 26.47552, longitude: 73.11445 },
+  "Chemical Engineering Department": { latitude: 26.47946, longitude: 73.11677 },
+  "Civil & Infrastructure Engineering Dept": { latitude: 26.47856, longitude: 73.11627 },
+  "Metallurgical & Materials Engg. Dept": { latitude: 26.47979, longitude: 73.11689 },
+  "Physics Department": { latitude: 26.47985, longitude: 73.11623 },
+  "Chemistry Department": { latitude: 26.47546, longitude: 73.11507 },
+  "Mathematics Department": { latitude: 26.48028, longitude: 73.11586 },
+  "Humanities & Social Sciences Dept": { latitude: 26.48013, longitude: 73.11647 },
+  "Basic Laboratory": { latitude: 26.47498, longitude: 73.11501 },
+  "Computer Center": { latitude: 26.47148, longitude: 73.11397 },
+
+  "Administration Block": { latitude: 26.4726, longitude: 73.1156 },
+  "Student Activity Center": { latitude: 26.4724, longitude: 73.1155 },
+  
+  "Hostel I3": { latitude: 26.47164, longitude: 73.11614 },
+  "Hostel I2": { latitude: 26.47159, longitude: 73.11544},
+
+  "Medical Center": { latitude: 26.48125, longitude: 73.11961 },
+ // sports
+  "Sports Complex": { latitude: 26.47675, longitude: 73.11974 },
+  "Cricket Ground": { latitude: 26.47855, longitude: 73.12262 },
+  "Volleyball Court": { latitude: 26.47759, longitude: 73.12167 },
+  "Football Field": { latitude: 26.47621, longitude: 73.12056 },
+  "Basketball Court": { latitude: 26.47662, longitude: 73.12118 },
+  "Tennis Court": { latitude: 26.47711, longitude: 73.12114 },
+  "Badminton Court": { latitude: 26.47699, longitude: 73.11943},
+  "Hockey Field": { latitude: 26.47378, longitude: 73.11949},
+  
+  "Canara Bank Atm": { latitude: 26.47113, longitude: 73.11373 },
+
+  "Shiv Mandir": { latitude: 26.48562, longitude: 73.12309},
+
+  "Old Mess": { latitude: 26.47204, longitude: 73.11679},
+  "New Mess": { latitude: 26.47290, longitude: 73.11724},
+  "Canteen": { latitude: 26.47210, longitude: 73.11685},
+
+  "Fresh N Green": { latitude: 26.46652, longitude: 73.11165 },
+  "Main Entrance Gate": { latitude: 26.46669, longitude: 73.11532 }
 };
 
 // IITJ Campus Center Coordinates
 export const IITJ_CENTER = {
-  latitude: 26.1810,
-  longitude: 73.1170,
+  latitude: 26.47103,
+  longitude: 73.11341,
 };
+
+// Building markers for Google Earth view
+export const buildingMarkers = Object.entries(locationCoordinates).map(([name, coords]) => ({
+  name,
+  position: { lat: coords.latitude, lng: coords.longitude }
+}));
 
 // Helper function to determine location type
 export function getLocationType(location) {
   if (!location || typeof location !== 'string') return 'other';
   const lowerLocation = location.toLowerCase();
-  if (lowerLocation.includes('mess')) return 'dining';
+  if (lowerLocation.includes('hostel')) return 'residential';
+  if (lowerLocation.includes('department') || lowerLocation.includes('block')) return 'academic';
   if (lowerLocation.includes('library')) return 'academic';
   if (lowerLocation.includes('hall')) return 'academic';
-  if (lowerLocation.includes('ground') || lowerLocation.includes('court')) return 'sports';
-  if (lowerLocation.includes('hostel')) return 'residential';
+  if (lowerLocation.includes('dining')) return 'dining';
   if (lowerLocation.includes('medical')) return 'health';
-  if (lowerLocation.includes('parking')) return 'transport';
-  if (lowerLocation.includes('cafeteria')) return 'dining';
-  if (lowerLocation.includes('auditorium')) return 'events';
+  if (lowerLocation.includes('sports')) return 'sports';
+  if (lowerLocation.includes('shopping')) return 'commercial';
+  if (lowerLocation.includes('guest')) return 'residential';
+  if (lowerLocation.includes('housing')) return 'residential';
+  if (lowerLocation.includes('park')) return 'commercial';
   if (lowerLocation.includes('gate')) return 'entrance';
-  if (lowerLocation.includes('block')) return 'academic';
-  if (lowerLocation.includes('pool')) return 'sports';
-  if (lowerLocation.includes('gym')) return 'sports';
+  if (lowerLocation.includes('auditorium')) return 'events';
+  if (lowerLocation.includes('center')) return 'events';
   return 'other';
 }
 
@@ -92,20 +157,19 @@ export function getLocationType(location) {
 export function getLocationIcon(location) {
   if (!location || typeof location !== 'string') return 'place';
   const lowerLocation = location.toLowerCase();
-  if (lowerLocation.includes('mess')) return 'restaurant';
-  if (lowerLocation.includes('library')) return 'local-library';
-  if (lowerLocation.includes('hall')) return 'school';
-  if (lowerLocation.includes('ground')) return 'sports-soccer';
-  if (lowerLocation.includes('court')) return 'sports-basketball';
   if (lowerLocation.includes('hostel')) return 'home';
+  if (lowerLocation.includes('department') || lowerLocation.includes('block')) return 'school';
+  if (lowerLocation.includes('library')) return 'local-library';
+  if (lowerLocation.includes('hall')) return 'restaurant';
   if (lowerLocation.includes('medical')) return 'medical-services';
-  if (lowerLocation.includes('parking')) return 'local-parking';
-  if (lowerLocation.includes('cafeteria')) return 'local-cafe';
-  if (lowerLocation.includes('auditorium')) return 'event';
+  if (lowerLocation.includes('sports')) return 'sports-soccer';
+  if (lowerLocation.includes('shopping')) return 'shopping-cart';
+  if (lowerLocation.includes('guest')) return 'hotel';
+  if (lowerLocation.includes('housing')) return 'apartment';
+  if (lowerLocation.includes('park')) return 'business';
   if (lowerLocation.includes('gate')) return 'gate';
-  if (lowerLocation.includes('block')) return 'business';
-  if (lowerLocation.includes('pool')) return 'pool';
-  if (lowerLocation.includes('gym')) return 'fitness-center';
+  if (lowerLocation.includes('auditorium')) return 'event';
+  if (lowerLocation.includes('center')) return 'event';
   return 'place';
 }
 

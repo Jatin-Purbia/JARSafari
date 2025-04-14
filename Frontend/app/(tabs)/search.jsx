@@ -277,7 +277,7 @@ const SearchScreen = () => {
             }
           </script>
           <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQhelQ56ilkCodWB5Wyi9hNKI_eb5p4hQ&callback=initMap"
             onerror="handleMapError()">
           </script>
         </body>
@@ -286,7 +286,7 @@ const SearchScreen = () => {
   };
 
   // Handle search for route
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!fromLocation || !toLocation) {
       Alert.alert('Error', 'Please enter both starting and destination points');
       return;
@@ -295,26 +295,32 @@ const SearchScreen = () => {
     setIsLoading(true);
     setError(null);
     
-    // Simulate network delay
-    setTimeout(() => {
-      try {
-        // Find the shortest path using Dijkstra's algorithm
-        const result = dijkstra(campusGraph, fromLocation, toLocation);
-        
-        if (result.path.length === 0) {
-          Alert.alert('No Route Found', 'No route found between these locations');
-          setIsLoading(false);
-          return;
-        }
-        
-        setRoute(result);
+    try {
+      // Get coordinates for start and end points
+      const startCoords = locationCoordinates[fromLocation];
+      const endCoords = locationCoordinates[toLocation];
+
+      if (!startCoords || !endCoords) {
+        Alert.alert('Error', 'Invalid locations selected');
         setIsLoading(false);
-      } catch (error) {
-        console.error('Error finding route:', error);
-        setError('An error occurred while finding the route');
-        setIsLoading(false);
+        return;
       }
-    }, 1000);
+
+      // Navigate to Mapscreen with route parameters
+      router.push({
+        pathname: "/Mapscreen",
+        params: { 
+          destination: toLocation,
+          userLatitude: startCoords.latitude,
+          userLongitude: startCoords.longitude
+        }
+      });
+    } catch (error) {
+      console.error('Error finding route:', error);
+      setError('An error occurred while finding the route');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Render suggestion item with improved UI
@@ -434,10 +440,17 @@ const SearchScreen = () => {
                 <Text className="text-xl font-bold text-black">Route Found</Text>
                 <TouchableOpacity
                   className="bg-yellow-100 p-2 rounded-full"
-                  onPress={() => setShowGoogleEarth(!showGoogleEarth)}
+                  onPress={() => router.push({
+                    pathname: "/Mapscreen",
+                    params: { 
+                      destination: toLocation,
+                      userLatitude: locationCoordinates[fromLocation].latitude,
+                      userLongitude: locationCoordinates[fromLocation].longitude
+                    }
+                  })}
                 >
                   <Ionicons 
-                    name={showGoogleEarth ? "map" : "earth"} 
+                    name="map" 
                     size={24} 
                     color="#F59E0B" 
                   />
@@ -455,17 +468,22 @@ const SearchScreen = () => {
                 </View>
               </View>
               
-              <Text className="text-gray-600 mb-2">Route:</Text>
+              <Text className="text-gray-600 mb-2">Route Steps:</Text>
               <View className="bg-gray-50 p-3 rounded-xl">
-                {route.path.map((location, index) => (
-                  <View key={index} className="flex-row items-center mb-2">
-                    <View className="w-6 h-6 rounded-full bg-yellow-400 items-center justify-center mr-2">
-                      <Text className="text-xs font-bold">{index + 1}</Text>
+                {route.steps.map((step, index) => (
+                  <View key={index} className="mb-3">
+                    <View className="flex-row items-center mb-1">
+                      <View className="w-6 h-6 rounded-full bg-yellow-400 items-center justify-center mr-2">
+                        <Text className="text-xs font-bold">{index + 1}</Text>
+                      </View>
+                      <Text className="text-black flex-1" numberOfLines={2}>
+                        {step.instruction.replace(/<[^>]*>/g, '')}
+                      </Text>
                     </View>
-                    <Text className="text-black">{location}</Text>
-                    {index < route.path.length - 1 && (
-                      <Ionicons name="arrow-forward" size={16} color="#999" className="mx-2" />
-                    )}
+                    <View className="flex-row justify-between ml-8">
+                      <Text className="text-sm text-gray-500">{step.distance}</Text>
+                      <Text className="text-sm text-gray-500">{step.duration}</Text>
+                    </View>
                   </View>
                 ))}
               </View>

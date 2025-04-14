@@ -29,36 +29,36 @@ import {
 // Time-based recommendations
 const timeBasedRecommendations = {
   morning: [
-    { icon: "restaurant", label: "Old Mess", lib: MaterialIcons },
-    { icon: "restaurant", label: "New Mess", lib: MaterialIcons },
+    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
+    { icon: "school", label: "Main Academic Block", lib: MaterialIcons },
+    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
     { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
-    { icon: "school", label: "Lecture Hall", lib: MaterialIcons },
-    { icon: "local-library", label: "Library", lib: MaterialIcons },
-    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
+    { icon: "school", label: "Lecture Hall Complex", lib: MaterialIcons },
+    { icon: "event", label: "Student Activity Center", lib: MaterialIcons },
   ],
   afternoon: [
-    { icon: "restaurant", label: "Mess", lib: MaterialIcons },
-    { icon: "local-library", label: "Library", lib: MaterialIcons },
+    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
+    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
     { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
-    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
-    { icon: "school", label: "Lecture Hall", lib: MaterialIcons },
-    { icon: "admin-panel-settings", label: "Admin Block", lib: MaterialIcons },
+    { icon: "school", label: "Main Academic Block", lib: MaterialIcons },
+    { icon: "school", label: "Lecture Hall Complex", lib: MaterialIcons },
+    { icon: "business", label: "Administration Block", lib: MaterialIcons },
   ],
   evening: [
-    { icon: "restaurant", label: "Mess", lib: MaterialIcons },
-    { icon: "sports-soccer", label: "Ground", lib: MaterialIcons },
-    { icon: "local-library", label: "Library", lib: MaterialIcons },
-    { icon: "umbrella", label: "Shamiyana", lib: MaterialIcons },
-    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
-    { icon: "sports-basketball", label: "Basketball Court", lib: MaterialIcons },
+    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
+    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
+    { icon: "event", label: "Student Activity Center", lib: MaterialIcons },
+    { icon: "event", label: "Auditorium", lib: MaterialIcons },
+    { icon: "shopping-cart", label: "Shopping Complex", lib: MaterialIcons },
   ],
   night: [
-    { icon: "restaurant", label: "Mess", lib: MaterialIcons },
-    { icon: "nightlight", label: "Ground", lib: MaterialIcons },
-    { icon: "local-cafe", label: "Cafeteria", lib: MaterialIcons },
-    { icon: "home", label: "Hostel", lib: MaterialIcons },
+    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
+    { icon: "home", label: "Hostel Block A", lib: MaterialIcons },
+    { icon: "home", label: "Hostel Block B", lib: MaterialIcons },
+    { icon: "home", label: "Hostel Block C", lib: MaterialIcons },
+    { icon: "home", label: "Hostel Block D", lib: MaterialIcons },
     { icon: "medical-services", label: "Medical Center", lib: MaterialIcons },
-    { icon: "fitness-center", label: "Gymnasium", lib: MaterialIcons },
   ]
 };
 
@@ -279,7 +279,11 @@ export default function Homepage() {
   const handleLocationPress = (location) => {
     router.push({
       pathname: "/Mapscreen",
-      params: { destination: location }
+      params: { 
+        destination: location,
+        userLatitude: userLocation?.coords?.latitude,
+        userLongitude: userLocation?.coords?.longitude
+      }
     });
   };
 
