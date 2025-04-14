@@ -6,43 +6,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from 'react-native-webview';
 import { useRouter } from 'expo-router';
 
-// Campus graph representation for Dijkstra's algorithm
-const campusGraph = {
-  "Hostel A": { "Academic Block": 5, "Cafeteria": 3, "Library": 7 },
-  "Hostel B": { "Academic Block": 6, "Cafeteria": 4, "Library": 8 },
-  "Academic Block": { "Hostel A": 5, "Hostel B": 6, "Library": 2, "Cafeteria": 4 },
-  "Library": { "Hostel A": 7, "Hostel B": 8, "Cafeteria": 3, "Sports Complex": 6 },
-  "Cafeteria": { "Hostel A": 3, "Hostel B": 4, "Academic Block": 4, "Library": 3, "Sports Complex": 5 },
-  "Sports Complex": { "Library": 6, "Cafeteria": 5, "Medical Center": 4 },
-  "Medical Center": { "Sports Complex": 4, "Hostel C": 3 },
-  "Hostel C": { "Medical Center": 3, "Hostel D": 2 },
-  "Hostel D": { "Hostel C": 2, "Parking Lot": 4 },
-  "Parking Lot": { "Hostel D": 4, "Main Gate": 3 },
-  "Main Gate": { "Parking Lot": 3, "Auditorium": 5 },
-  "Auditorium": { "Main Gate": 5, "Academic Block": 6 }
-};
-
-// Location coordinates for IITJ
-const locationCoordinates = {
-  "Hostel A": { latitude: 26.1799, longitude: 73.1159 },
-  "Hostel B": { latitude: 26.1801, longitude: 73.1161 },
-  "Academic Block": { latitude: 26.1803, longitude: 73.1163 },
-  "Library": { latitude: 26.1805, longitude: 73.1165 },
-  "Cafeteria": { latitude: 26.1807, longitude: 73.1167 },
-  "Sports Complex": { latitude: 26.1809, longitude: 73.1169 },
-  "Medical Center": { latitude: 26.1811, longitude: 73.1171 },
-  "Hostel C": { latitude: 26.1813, longitude: 73.1173 },
-  "Hostel D": { latitude: 26.1815, longitude: 73.1175 },
-  "Parking Lot": { latitude: 26.1817, longitude: 73.1177 },
-  "Main Gate": { latitude: 26.1819, longitude: 73.1179 },
-  "Auditorium": { latitude: 26.1821, longitude: 73.1181 }
-};
-
-// IITJ Campus Center Coordinates
-const IITJ_CENTER = {
-  latitude: 26.1810,
-  longitude: 73.1170,
-};
+// Import location data from the data file
+import { 
+  locations, 
+  campusGraph, 
+  locationCoordinates,
+  IITJ_CENTER,
+  getLocationType,
+  getLocationIcon,
+  findShortestPath
+} from '../data/locationData';
 
 // Dijkstra's algorithm implementation
 function dijkstra(graph, start, end) {
@@ -125,7 +98,7 @@ const SearchScreen = () => {
   const [showToSuggestions, setShowToSuggestions] = useState(false);
 
   // Get all available locations
-  const availableLocations = Object.keys(campusGraph);
+  const availableLocations = locations;
 
   // Filter locations based on input
   const filterLocations = (input, locations) => {
@@ -306,6 +279,42 @@ const SearchScreen = () => {
         return;
       }
 
+      // Find the shortest path using Dijkstra's algorithm
+      const path = findShortestPath(fromLocation, toLocation);
+      
+      if (path.path.length === 0) {
+        Alert.alert('Error', 'No walkable path found between the selected locations. Please try different locations.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Calculate total distance and estimated time
+      const totalDistance = path.distance;
+      const walkingSpeed = 5; // km/h
+      const estimatedTime = Math.ceil((totalDistance / walkingSpeed) * 60); // minutes
+
+      // Generate route steps
+      const steps = path.path.map((location, index) => {
+        const nextLocation = path.path[index + 1];
+        if (!nextLocation) return null;
+        
+        const distance = Math.max(campusGraph[location][nextLocation], 0.1); // Minimum 0.1 km
+        const duration = Math.max(Math.ceil((distance / 5) * 60), 1); // Minimum 1 minute
+        
+        return {
+          instruction: `Go to ${nextLocation}`,
+          distance: `${distance.toFixed(1)} km`,
+          duration: `${duration} minutes`
+        };
+      }).filter(step => step !== null);
+
+      setRoute({
+        path: path.path,
+        distance: Math.max(totalDistance, 0.1), // Ensure minimum total distance
+        time: Math.max(estimatedTime, 1), // Ensure minimum total time
+        steps
+      });
+
       // Navigate to Mapscreen with route parameters
       router.push({
         pathname: "/Mapscreen",
@@ -317,7 +326,7 @@ const SearchScreen = () => {
       });
     } catch (error) {
       console.error('Error finding route:', error);
-      setError('An error occurred while finding the route');
+      setError('An error occurred while finding the route. Please try again.');
     } finally {
       setIsLoading(false);
     }

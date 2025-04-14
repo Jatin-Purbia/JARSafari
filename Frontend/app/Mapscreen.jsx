@@ -10,63 +10,9 @@ import {
   locationCoordinates,
   IITJ_CENTER,
   buildingMarkers,
-  campusGraph
+  campusGraph,
+  findShortestPath
 } from './data/locationData';
-
-// Helper function to find the shortest path using Dijkstra's algorithm
-const findShortestPath = (graph, start, end) => {
-  const distances = {};
-  const previous = {};
-  const unvisited = new Set();
-  const visited = new Set();
-
-  // Initialize distances
-  Object.keys(graph).forEach(node => {
-    distances[node] = Infinity;
-    previous[node] = null;
-    unvisited.add(node);
-  });
-  distances[start] = 0;
-
-  while (unvisited.size > 0) {
-    // Find the node with the smallest distance
-    let current = null;
-    let smallestDistance = Infinity;
-    unvisited.forEach(node => {
-      if (distances[node] < smallestDistance) {
-        smallestDistance = distances[node];
-        current = node;
-      }
-    });
-
-    if (current === end) break;
-    if (current === null) break;
-
-    unvisited.delete(current);
-    visited.add(current);
-
-    // Update distances to neighbors
-    Object.entries(graph[current]).forEach(([neighbor, distance]) => {
-      if (!visited.has(neighbor)) {
-        const newDistance = distances[current] + distance;
-        if (newDistance < distances[neighbor]) {
-          distances[neighbor] = newDistance;
-          previous[neighbor] = current;
-        }
-      }
-    });
-  }
-
-  // Build the path
-  const path = [];
-  let current = end;
-  while (current !== null) {
-    path.unshift(current);
-    current = previous[current];
-  }
-
-  return path;
-};
 
 // Helper function to calculate intermediate points between two coordinates
 const calculateIntermediatePoints = (start, end, numPoints = 5) => {
@@ -93,6 +39,89 @@ const generatePathCoordinates = (path, locationCoordinates) => {
   return coordinates;
 };
 
+// Helper function to calculate distance between two points
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  const distance = R * c; // Distance in km
+  return distance;
+};
+
+const deg2rad = (deg) => {
+  return deg * (Math.PI/180);
+};
+
+// A* search algorithm implementation
+const findPath = (graph, start, end, locationCoordinates) => {
+  const openSet = new Set([start]);
+  const cameFrom = {};
+  const gScore = {};
+  const fScore = {};
+  
+  // Initialize scores
+  Object.keys(graph).forEach(node => {
+    gScore[node] = Infinity;
+    fScore[node] = Infinity;
+  });
+  
+  gScore[start] = 0;
+  fScore[start] = heuristic(start, end, locationCoordinates);
+
+  while (openSet.size > 0) {
+    // Find node with lowest fScore
+    let current = null;
+    let lowestFScore = Infinity;
+    openSet.forEach(node => {
+      if (fScore[node] < lowestFScore) {
+        lowestFScore = fScore[node];
+        current = node;
+      }
+    });
+
+    if (current === end) {
+      // Reconstruct path
+      const path = [end];
+      while (cameFrom[current]) {
+        current = cameFrom[current];
+        path.unshift(current);
+      }
+      return path;
+    }
+
+    openSet.delete(current);
+
+    // Check neighbors
+    Object.keys(graph[current]).forEach(neighbor => {
+      const tentativeGScore = gScore[current] + graph[current][neighbor];
+      
+      if (tentativeGScore < gScore[neighbor]) {
+        cameFrom[neighbor] = current;
+        gScore[neighbor] = tentativeGScore;
+        fScore[neighbor] = gScore[neighbor] + heuristic(neighbor, end, locationCoordinates);
+        
+        if (!openSet.has(neighbor)) {
+          openSet.add(neighbor);
+        }
+      }
+    });
+  }
+
+  return []; // No path found
+};
+
+// Heuristic function for A* (Haversine distance)
+const heuristic = (node1, node2, locationCoordinates) => {
+  const coords1 = locationCoordinates[node1];
+  const coords2 = locationCoordinates[node2];
+  return calculateDistance(coords1.latitude, coords1.longitude, coords2.latitude, coords2.longitude);
+};
+
 export default function Mapscreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -105,7 +134,7 @@ export default function Mapscreen() {
   const [showControls, setShowControls] = useState(true);
   const [routeInfo, setRouteInfo] = useState(null);
 
-  // Initialize location tracking
+  // Initialize location tracking and route calculation
   useEffect(() => {
     (async () => {
       try {
@@ -136,41 +165,122 @@ export default function Mapscreen() {
             ? { coords: { latitude: parseFloat(params.userLatitude), longitude: parseFloat(params.userLongitude) } }
             : location;
 
-          console.log('Start Location:', startLocation.coords);
-          console.log('Destination:', destCoords);
-
-          // Find the shortest path using Dijkstra's algorithm
-          const path = findShortestPath(campusGraph, params.fromLocation || 'Main Academic Block', destination);
+          // Find the nearest node to user's location
+          let nearestNode = null;
+          let minDistance = Infinity;
           
-          if (path.length > 0) {
-            // Generate smooth path coordinates
-            const coordinates = generatePathCoordinates(path, locationCoordinates);
+          Object.entries(locationCoordinates).forEach(([node, coords]) => {
+            const distance = calculateDistance(
+              startLocation.coords.latitude,
+              startLocation.coords.longitude,
+              coords.latitude,
+              coords.longitude
+            );
+            if (distance < minDistance) {
+              minDistance = distance;
+              nearestNode = node;
+            }
+          });
+
+          // Find the path using Dijkstra's algorithm
+          const path = findShortestPath(campusGraph, nearestNode, destination);
+          
+          if (path.path.length > 0) {
+            // Start with user's current location
+            const coordinates = [{
+              latitude: startLocation.coords.latitude,
+              longitude: startLocation.coords.longitude
+            }];
+
+            // Add path to nearest node
+            const nearestNodeCoords = locationCoordinates[nearestNode];
+            coordinates.push({
+              latitude: nearestNodeCoords.latitude,
+              longitude: nearestNodeCoords.longitude
+            });
+
+            // Generate smooth path coordinates for the campus path
+            const pathCoordinates = generatePathCoordinates(path.path, locationCoordinates);
+            coordinates.push(...pathCoordinates);
+
+            // Add destination point
+            coordinates.push({
+              latitude: destCoords.latitude,
+              longitude: destCoords.longitude
+            });
+
             setRouteCoordinates(coordinates);
 
             // Calculate approximate distance and time
-            const totalDistance = path.length * 0.1; // Approximate distance in km
+            let totalDistance = 0;
+            
+            // Add distance from current location to nearest node
+            totalDistance += calculateDistance(
+              startLocation.coords.latitude,
+              startLocation.coords.longitude,
+              nearestNodeCoords.latitude,
+              nearestNodeCoords.longitude
+            );
+
+            // Add distance along the path
+            for (let i = 0; i < path.path.length - 1; i++) {
+              const start = locationCoordinates[path.path[i]];
+              const end = locationCoordinates[path.path[i + 1]];
+              totalDistance += calculateDistance(
+                start.latitude,
+                start.longitude,
+                end.latitude,
+                end.longitude
+              );
+            }
+            
             const walkingSpeed = 5; // km/h
             const estimatedTime = Math.ceil((totalDistance / walkingSpeed) * 60); // minutes
 
             setRouteInfo({
-              distance: `${totalDistance.toFixed(1)} km`,
-              duration: `${estimatedTime} minutes`,
-              steps: path.map((location, index) => ({
-                instruction: `Go to ${location}`,
-                distance: '0.1 km',
-                duration: '1 min'
-              }))
+              distance: `${Math.max(totalDistance, 0.1).toFixed(1)} km`,
+              duration: `${Math.max(estimatedTime, 1)} minutes`,
+              steps: [
+                {
+                  instruction: `Walk to ${nearestNode}`,
+                  distance: `${Math.max(calculateDistance(
+                    startLocation.coords.latitude,
+                    startLocation.coords.longitude,
+                    nearestNodeCoords.latitude,
+                    nearestNodeCoords.longitude
+                  ), 0.1).toFixed(1)} km`,
+                  duration: `${Math.max(Math.ceil((calculateDistance(
+                    startLocation.coords.latitude,
+                    startLocation.coords.longitude,
+                    nearestNodeCoords.latitude,
+                    nearestNodeCoords.longitude
+                  ) / 5) * 60), 1)} minutes`
+                },
+                ...path.path.map((location, index) => {
+                  const nextLocation = path.path[index + 1];
+                  if (!nextLocation) return null;
+                  
+                  const distance = Math.max(campusGraph[location][nextLocation], 0.1); // Minimum 0.1 km
+                  const duration = Math.max(Math.ceil((distance / 5) * 60), 1); // Minimum 1 minute
+                  
+                  return {
+                    instruction: `Go to ${nextLocation}`,
+                    distance: `${distance.toFixed(1)} km`,
+                    duration: `${duration} minutes`
+                  };
+                }).filter(step => step !== null)
+              ]
             });
-
-            // Fit map to show the entire route with padding
-            if (mapRef.current) {
-              mapRef.current.fitToCoordinates(coordinates, {
-                edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
-                animated: true,
-              });
-            }
           } else {
-            setError('Could not find a path to the destination');
+            setError('No path found to destination');
+          }
+
+          // Fit map to show the entire route with padding
+          if (mapRef.current) {
+            mapRef.current.fitToCoordinates(routeCoordinates, {
+              edgePadding: { top: 100, right: 100, bottom: 100, left: 100 },
+              animated: true,
+            });
           }
         }
       } catch (err) {
@@ -227,6 +337,18 @@ export default function Mapscreen() {
         showsScale={true}
         onPress={() => setShowControls(!showControls)}
       >
+        {/* Route Line */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#4285F4"
+            strokeWidth={5}
+            lineDashPattern={[1]}
+            geodesic={true}
+            zIndex={1}
+          />
+        )}
+
         {/* User Location Marker */}
         {userLocation && (
           <Marker
@@ -235,6 +357,7 @@ export default function Mapscreen() {
               longitude: userLocation.coords.longitude,
             }}
             title="You are here"
+            zIndex={2}
           >
             <View style={styles.userMarker}>
               <View style={styles.userMarkerDot} />
@@ -247,22 +370,12 @@ export default function Mapscreen() {
           <Marker
             coordinate={locationCoordinates[params.destination]}
             title={params.destination}
+            zIndex={2}
           >
             <View style={styles.destinationMarker}>
-              <Ionicons name="location" size={24} color="#F59E0B" />
+              <Ionicons name="location" size={24} color="#4285F4" />
             </View>
           </Marker>
-        )}
-
-        {/* Route Line */}
-        {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#F59E0B"
-            strokeWidth={5}
-            lineDashPattern={[1]}
-            geodesic={true}
-          />
         )}
 
         {/* Building Markers */}
@@ -380,7 +493,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#F59E0B',
+    borderColor: '#4285F4',
   },
   buildingMarker: {
     width: 24,

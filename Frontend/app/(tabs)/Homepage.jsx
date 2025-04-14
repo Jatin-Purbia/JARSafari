@@ -23,42 +23,43 @@ import {
   campusGraph, 
   locationCoordinates,
   getLocationType,
-  getLocationIcon
+  getLocationIcon,
+  groupLocationsByType
 } from '../data/locationData';
 
-// Time-based recommendations
+// Time-based recommendations based on location types
 const timeBasedRecommendations = {
   morning: [
-    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
-    { icon: "school", label: "Main Academic Block", lib: MaterialIcons },
-    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
-    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "restaurant", label: "Old Mess", lib: MaterialIcons },
+    { icon: "restaurant", label: "New Mess", lib: MaterialIcons },
     { icon: "school", label: "Lecture Hall Complex", lib: MaterialIcons },
-    { icon: "event", label: "Student Activity Center", lib: MaterialIcons },
+    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
+    { icon: "sports-soccer", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "school", label: "Computer Science Department", lib: MaterialIcons },
   ],
   afternoon: [
-    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
+    { icon: "restaurant", label: "Canteen", lib: MaterialIcons },
     { icon: "local-library", label: "Central Library", lib: MaterialIcons },
-    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
-    { icon: "school", label: "Main Academic Block", lib: MaterialIcons },
-    { icon: "school", label: "Lecture Hall Complex", lib: MaterialIcons },
+    { icon: "sports-soccer", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "school", label: "Mechanical Engineering Department", lib: MaterialIcons },
+    { icon: "school", label: "Electrical Engineering Department", lib: MaterialIcons },
     { icon: "business", label: "Administration Block", lib: MaterialIcons },
   ],
   evening: [
-    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
-    { icon: "sports", label: "Sports Complex", lib: MaterialIcons },
+    { icon: "restaurant", label: "Old Mess", lib: MaterialIcons },
+    { icon: "sports-soccer", label: "Sports Complex", lib: MaterialIcons },
     { icon: "local-library", label: "Central Library", lib: MaterialIcons },
     { icon: "event", label: "Student Activity Center", lib: MaterialIcons },
-    { icon: "event", label: "Auditorium", lib: MaterialIcons },
-    { icon: "shopping-cart", label: "Shopping Complex", lib: MaterialIcons },
+    { icon: "sports-basketball", label: "Basketball Court", lib: MaterialIcons },
+    { icon: "sports-tennis", label: "Tennis Court", lib: MaterialIcons },
   ],
   night: [
-    { icon: "restaurant", label: "Dining Hall", lib: MaterialIcons },
-    { icon: "home", label: "Hostel Block A", lib: MaterialIcons },
-    { icon: "home", label: "Hostel Block B", lib: MaterialIcons },
-    { icon: "home", label: "Hostel Block C", lib: MaterialIcons },
-    { icon: "home", label: "Hostel Block D", lib: MaterialIcons },
+    { icon: "restaurant", label: "Canteen", lib: MaterialIcons },
+    { icon: "home", label: "Hostel I3", lib: MaterialIcons },
+    { icon: "home", label: "Hostel I2", lib: MaterialIcons },
     { icon: "medical-services", label: "Medical Center", lib: MaterialIcons },
+    { icon: "local-library", label: "Central Library", lib: MaterialIcons },
+    { icon: "event", label: "Student Activity Center", lib: MaterialIcons },
   ]
 };
 
