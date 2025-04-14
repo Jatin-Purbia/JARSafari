@@ -15,10 +15,10 @@
     },
     "android": {
       "config": {
-          "googleMaps": {
-            "apiKey": "YOUR_API_KEY"
-          }
-        },
+        "googleMaps": {
+          "apiKey": "YOUR_API_KEY"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       }
@@ -38,7 +38,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
