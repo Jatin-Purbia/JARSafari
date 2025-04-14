@@ -96,10 +96,11 @@ export default function LoginScreen() {
             style={{ position: "absolute", right: 16, top: 16 }}
           >
             <FontAwesome
-              name={passwordVisible ? "eye-slash" : "eye"}
-              size={20}
-              color="black"
-            />
+            name={passwordVisible ? "eye" : "eye-slash"}
+            size={20}
+            color="black"
+          />
+
           </TouchableOpacity>
         </View>
 
