@@ -18,9 +18,11 @@ process.on("uncaughtException", (err) => {
 });
 
 const PORT = process.env.PORT || 4000;
+const HOST = '172.31.107.222'; // Use the specific IP address
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+  console.log(`You can also access it via http://localhost:${PORT}`);
 });
 
 //unhandled promise rejection
