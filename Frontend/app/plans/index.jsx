@@ -5,13 +5,26 @@ import { fetchPlans } from "../../store/slices/planSlice";
 import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
+import LoadingScreen from "../../components/loadingscreen"; // adjust path if needed
+
+
 
 export default function PlansScreen() {
   const dispatch = useDispatch();
   const router = useRouter();
   const { plans, loading, error } = useSelector((state) => state.plans);
   const [refreshing, setRefreshing] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowLoader(false);
+      loadPlans();
+    }, 2500); // match this duration to your video length
+  
+    return () => clearTimeout(timeout);
+  }, []);
+  
   useEffect(() => {
     loadPlans();
   }, []);
@@ -63,7 +76,11 @@ export default function PlansScreen() {
       </View>
     </TouchableOpacity>
   );
-
+   
+  if (showLoader) {
+    return <LoadingScreen />;
+  }
+  
   if (loading && !refreshing && plans.length === 0) {
     return (
       <View className="flex-1 justify-center items-center bg-gray-50">

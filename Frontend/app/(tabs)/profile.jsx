@@ -11,16 +11,29 @@ export default function Profile() {
     return name && name.length > 0 ? name.charAt(0).toUpperCase() : '?';
   };
 
+  const getColorForInitial = (initial) => {
+    const colors = {
+      A: '#F44336', B: '#E91E63', C: '#9C27B0', D: '#673AB7', E: '#3F51B5',
+      F: '#2196F3', G: '#03A9F4', H: '#00BCD4', I: '#009688', J: '#4CAF50',
+      K: '#8BC34A', L: '#CDDC39', M: '#FFC107', N: '#FF9800', O: '#FF5722',
+      P: '#795548', Q: '#9E9E9E', R: '#607D8B', S: '#E53935', T: '#D81B60',
+      U: '#8E24AA', V: '#5E35B1', W: '#3949AB', X: '#1E88E5', Y: '#039BE5',
+      Z: '#00ACC1'
+    };
+    return colors[initial] || '#007BFF'; // default blue if no match
+  };
+
   const initial = getInitial(user?.name);
+  const avatarColor = getColorForInitial(initial);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1 px-4">
         <View className="py-10 items-center">
-          <Text className="text-4xl font-extrabold text-blue-700 mb-8">My Profile</Text>
+          <Text className="text-4xl font-extrabold text-black mb-8">My Profile</Text>
 
-          {/* Avatar Circle */}
-          <View className="w-24 h-24 rounded-full bg-blue-500 justify-center items-center mb-6 shadow-lg">
+          {/* Dynamic Avatar Circle */}
+          <View style={{ backgroundColor: avatarColor }} className="w-24 h-24 rounded-full justify-center items-center mb-6 shadow-lg">
             <Text className="text-white text-3xl font-bold">{initial}</Text>
           </View>
 
@@ -40,10 +53,10 @@ export default function Profile() {
 
           {/* Edit Button */}
           <TouchableOpacity
-            className="bg-blue-600 p-4 px-6 rounded-full shadow-md w-full active:opacity-80"
+            className="bg-yellow-400 p-4 px-6 rounded-2xl shadow-md w-full active:opacity-80"
             onPress={() => router.push('/user-info')}
           >
-            <Text className="text-white text-center font-semibold text-lg tracking-wide">
+            <Text className="text-black text-center font-semibold text-lg tracking-wide">
               Edit Profile
             </Text>
           </TouchableOpacity>

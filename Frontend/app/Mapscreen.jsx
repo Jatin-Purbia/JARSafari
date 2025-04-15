@@ -4,6 +4,7 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import LoadingScreen from "../components/loadingscreen";
 
 // Import location data from the data file
 import { 
@@ -133,6 +134,7 @@ export default function Mapscreen() {
   const [mapType, setMapType] = useState('satellite');
   const [showControls, setShowControls] = useState(true);
   const [routeInfo, setRouteInfo] = useState(null);
+  const [showLoader, setShowLoader] = useState(true);
 
   // Initialize location tracking and route calculation
   useEffect(() => {
@@ -313,7 +315,14 @@ export default function Mapscreen() {
       </View>
     );
   }
-
+  const handleFinishLoading = () => {
+    setShowLoader(false);
+  };
+  
+  if (showLoader) {
+    return <LoadingScreen onFinish={handleFinishLoading} />;
+  }
+  
   return (
     <View style={styles.container}>
       <MapView
@@ -442,7 +451,6 @@ export default function Mapscreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
