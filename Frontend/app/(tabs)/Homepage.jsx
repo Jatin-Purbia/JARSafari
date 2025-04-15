@@ -359,9 +359,9 @@ export default function Homepage() {
                   className="w-24 h-24 mb-2"
                   resizeMode="contain"
                 />
-                <Text className="text-2xl font-bold text-black mb-1">JAR Safari</Text>
+                <Text className="text-2xl font-bold text-black mb-1">JARSafari</Text>
                 <Text className="text-base text-gray-600 italic">
-                  "Your Campus Navigation Companion"
+                  Your Campus Navigation Companion
                 </Text>
               </View>
 
@@ -438,7 +438,7 @@ export default function Homepage() {
                     onPress={() => router.push("/Locations")}
                     className="bg-yellow-100 px-3 py-1 rounded-full"
                   >
-                    <Text className="text-xs text-yellow-800">View All Locations</Text>
+                    <Text className="text-xs text-yellow-800">View All</Text>
                   </TouchableOpacity>
                 </View>
                 
