@@ -32,13 +32,13 @@ export default function LandingPage() {
       <StatusBar style="light" translucent backgroundColor="transparent" />
       
       {/* Home Button */}
-      <View className="absolute top-12 right-6 z-10">
+      {/* <View className="absolute top-12 right-6 z-10">
         <Link href="/(tabs)/Homepage" asChild>
           <TouchableOpacity className="bg-white/20 px-4 py-2 rounded-full">
             <Text className="text-white font-medium">Home</Text>
           </TouchableOpacity>
         </Link>
-      </View>
+      </View> */}
       
       <View className="flex-1 justify-center items-center px-6">
         <Animated.View
@@ -63,9 +63,9 @@ export default function LandingPage() {
           </Text>
 
           {/* Action Button */}
-          <View className="w-full px-4">
-            <Link href="/login" asChild>
-              <TouchableOpacity className="overflow-hidden rounded-2xl shadow-lg shadow-black/50">
+          <View className="w-full px-10">
+            <Link href="/user-info" asChild>
+              <TouchableOpacity className="overflow-hidden rounded-lg w-full shadow-lg shadow-black/50">
                 <LinearGradient
                   colors={['#FCD34D', '#F59E0B']}
                   start={{ x: 0, y: 0 }}

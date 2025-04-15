@@ -1,16 +1,57 @@
 import { Stack } from "expo-router";
-import { Provider } from "react-redux";
-import { store } from "../store/store";
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function Layout() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user info exists
+    if (!global.userInfo) {
+      router.replace('/');
+    }
+  }, []);
+
   return (
-    <Provider store={store}>
-      <Stack
-        screenOptions={{
+    <Stack>
+      <Stack.Screen
+        name="(tabs)"
+        options={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#fff" },
-        }}>
-      </Stack>
-    </Provider>
+        }}
+      />
+      <Stack.Screen
+        name="user-info"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="favorites"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="Mapscreen"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Locations"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
   );
 }
