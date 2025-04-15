@@ -5,7 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 // Use the IP address that's working for your other routes
 // For local development on Android emulator, use 10.0.2.2 instead of localhost
 // For iOS simulator, localhost works fine
-const BASE_URL = "http://10.0.2.2:4000/api/v1";
+const BASE_URL = "http://172.31.107.222:4000/api/v1";
 
 // Async thunks
 export const login = createAsyncThunk(

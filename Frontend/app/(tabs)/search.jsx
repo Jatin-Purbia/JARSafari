@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from 'react-native-webview';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 // Import location data from the data file
 import { 
@@ -84,8 +84,9 @@ function dijkstra(graph, start, end) {
 
 const SearchScreen = () => {
   const router = useRouter();
-  const [fromLocation, setFromLocation] = useState('');
-  const [toLocation, setToLocation] = useState('');
+  const params = useLocalSearchParams();
+  const [fromLocation, setFromLocation] = useState(params.from || '');
+  const [toLocation, setToLocation] = useState(params.to || '');
   const [route, setRoute] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showGoogleEarth, setShowGoogleEarth] = useState(false);
@@ -321,7 +322,11 @@ const SearchScreen = () => {
         params: { 
           destination: toLocation,
           userLatitude: startCoords.latitude,
-          userLongitude: startCoords.longitude
+          userLongitude: startCoords.longitude,
+          path: JSON.stringify(path.path),
+          distance: totalDistance,
+          time: estimatedTime,
+          steps: JSON.stringify(steps)
         }
       });
     } catch (error) {
@@ -388,6 +393,7 @@ const SearchScreen = () => {
         {/* Search Form */}
         <View className="px-6 mt-4">
           <View className="bg-white rounded-2xl shadow-lg p-4">
+            
             {/* From Location */}
             <View className="mb-4">
               <View className="flex-row items-center mb-2">

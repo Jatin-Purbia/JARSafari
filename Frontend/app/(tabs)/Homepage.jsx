@@ -12,7 +12,7 @@ import {
   Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
@@ -224,11 +224,16 @@ function levenshteinDistance(a, b) {
 
 export default function Homepage() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
   const [timeOfDay, setTimeOfDay] = useState("morning");
-  const [userName, setUserName] = useState("Sharan");
+  const [userName, setUserName] = useState(global.userInfo?.name || "User");
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [locationPermission, setLocationPermission] = useState(false);
+  const [toLocation, setToLocation] = useState(params?.to || '');
+  const [favorites, setFavorites] = useState([]);
+
   const [actualTimeOfDay, setActualTimeOfDay] = useState("morning");
   
   // Determine time of day
@@ -257,6 +262,20 @@ export default function Homepage() {
         setUserLocation(location);
       }
     })();
+  }, []);
+
+  // Initialize favorites from global state
+  useEffect(() => {
+    if (global.favorites) {
+      setFavorites(global.favorites);
+    }
+  }, []);
+
+  // Initialize user name from global state
+  useEffect(() => {
+    if (global.userInfo?.name) {
+      setUserName(global.userInfo.name);
+    }
   }, []);
 
   // Get greeting based on time of day
@@ -407,6 +426,8 @@ export default function Homepage() {
                 )}
               </View>
 
+             
+
               {/* Time-based Recommendations - Full Width */}
               <View className="mb-6">
                 <View className="px-6 mb-3 flex-row justify-between items-center">
@@ -430,6 +451,57 @@ export default function Homepage() {
                   scrollEnabled={true}
                   contentContainerStyle={{ paddingHorizontal: 16 }}
                 />
+              </View>
+
+               {/* Favorites Section */}
+               <View className="px-6 mb-6">
+                {favorites.length > 0 && (
+                  <View className="mb-6">
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text className="text-lg font-semibold text-blue-500">Your Favorites</Text>
+                      <TouchableOpacity 
+                        onPress={() => router.push("/Locations")}
+                        className="bg-blue-100 px-3 py-1 rounded-full"
+                      >
+                        <Text className="text-xs text-blue-800">View All</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      className="flex-row"
+                    >
+                      {favorites.map((location) => (
+                        <TouchableOpacity
+                          key={location}
+                          className="bg-blue-100 p-4 m-2 rounded-xl items-center w-32"
+                          onPress={() => {
+                            setToLocation(location);
+                            router.push({
+                              pathname: "/Mapscreen",
+                              params: { 
+                                destination: location,
+                                userLatitude: userLocation?.coords?.latitude,
+                                userLongitude: userLocation?.coords?.longitude
+                              }
+                            });
+                          }}
+                        >
+                          <View className="bg-blue-200 rounded-full p-3 mb-2">
+                            <MaterialIcons 
+                              name={getLocationIcon(location)} 
+                              size={24} 
+                              color="#3B82F6" 
+                            />
+                          </View>
+                          <Text className="text-blue-800 text-center" numberOfLines={2}>
+                            {location}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
 
               {/* Plan a Trip Button */}

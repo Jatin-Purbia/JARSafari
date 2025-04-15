@@ -8,11 +8,16 @@ export const locations = [
   "Physics Department", "Chemistry Department", "Mathematics Department",
   "Humanities & Social Sciences Dept", "Basic Laboratory", "Computer Center",
   "Administration Block", "Student Activity Center", "Hostel I3", "Hostel I2",
-  "Medical Center", "Sports Complex", "Cricket Ground", "Volleyball Court",
+  "Hostel B1", "Hostel B2", "Hostel B3", "Hostel B4", "Hostel B5",
+  "Hostel G1", "Hostel G2", "Hostel G3", "Hostel G4", "Hostel G5", "Hostel G6",
+  "Hostel Y4", "Hostel Y3", "Hostel O4", "Hostel O3",
+  "Medical Center(PHC)", "Sports Complex", "Cricket Ground", "Volleyball Court",
   "Football Field", "Basketball Court", "Tennis Court", "Badminton Court",
   "Hockey Field", "Canara Bank Atm", "Shiv Mandir", "Old Mess", "New Mess",
-  "Canteen", "Fresh N Green", "Main Entrance Gate"
+  "Canteen", "Fresh N Green", "Main Entrance Gate",
+  "Saloon", "Laundry IITJ", "Faculty quaters", "Faculty Parking", "Parking"
 ];
+
 
 // Location coordinates for IITJ
 export const locationCoordinates = {
@@ -39,7 +44,22 @@ export const locationCoordinates = {
   "Student Activity Center": { latitude: 26.4724, longitude: 73.1155 },
   "Hostel I3": { latitude: 26.47164, longitude: 73.11614 },
   "Hostel I2": { latitude: 26.47159, longitude: 73.11544},
-  "Medical Center": { latitude: 26.48125, longitude: 73.11961 },
+  "Hostel B1": { latitude: 26.472535, longitude: 73.115350},
+  "Hostel B2": { latitude: 26.472432, longitude: 73.116270},
+  "Hostel B3": { latitude: 26.472288, longitude: 73.117180},
+  "Hostel B4": { latitude: 26.472344, longitude: 73.116293},
+  "Hostel B5": { latitude: 26.472401, longitude: 73.115301},
+  "Hostel G1": { latitude: 26.473458, longitude: 73.115619},
+  "Hostel G2": { latitude: 26.473446, longitude: 73.116505},
+  "Hostel G3": { latitude: 26.473294, longitude: 73.117256},
+  "Hostel G4": { latitude: 26.473221, longitude: 73.117031},
+  "Hostel G5": { latitude: 26.473260, longitude: 73.116445},
+  "Hostel G6": { latitude: 26.473329, longitude: 73.115492},
+  "Hostel Y4": { latitude: 26.474178, longitude: 73.116951},
+  "Hostel Y3": { latitude: 26.474270, longitude: 73.117404},
+  "Hostel O4": { latitude: 26.475173, longitude: 73.117047},
+  "Hostel O3": { latitude: 26.475245, longitude: 73.117328},
+  "Medical Center(PHC)": { latitude: 26.48125, longitude: 73.11961 },
   "Sports Complex": { latitude: 26.47675, longitude: 73.11974 },
   "Cricket Ground": { latitude: 26.47855, longitude: 73.12262 },
   "Volleyball Court": { latitude: 26.47759, longitude: 73.12167 },
@@ -54,7 +74,15 @@ export const locationCoordinates = {
   "New Mess": { latitude: 26.47290, longitude: 73.11724},
   "Canteen": { latitude: 26.47210, longitude: 73.11685},
   "Fresh N Green": { latitude: 26.46652, longitude: 73.11165 },
-  "Main Entrance Gate": { latitude: 26.46669, longitude: 73.11532 }
+  "Main Entrance Gate": { latitude: 26.46669, longitude: 73.11532 },
+  "Saloon": { latitude: 26.475440,  longitude: 73.117928 },
+  "Laundry IITJ": { latitude: 26.476264, longitude: 73.117847 },
+  "Faculty quaters": { latitude: 26.473982, longitude: 73.111159 },
+  "Faculty Parking": { latitude: 26.473323,  longitude: 73.110286 },
+  "Parking": { latitude: 26.470434, longitude: 73.114126 }
+
+  
+
 };
 
 // IITJ Campus Center Coordinates

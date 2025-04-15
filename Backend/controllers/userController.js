@@ -33,8 +33,14 @@ exports.registerUser = async (req, res, next) => {
 
 // Login the user
 exports.loginUser = async (req, res, next) => {
+  console.log("Login request received:", req.body); // Debugging line
+  console.log("Email:", req.body.email); // Debugging line
+    console.log("Password:", req.body.password); // Debugging line
   try {
     const { email, password } = req.body;
+
+    console.log("Email:", email); // Debugging line
+    console.log("Password:", password); // Debugging line
 
     if (!email || !password) {
       return res.status(400).json({
