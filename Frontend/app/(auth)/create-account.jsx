@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { FontAwesome } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { useDispatch, useSelector } from "react-redux";
-import { register, clearError } from "../../store/slices/authSlice";
 import { LinearGradient } from 'expo-linear-gradient';
 
 // ✅ Email Validator Component
