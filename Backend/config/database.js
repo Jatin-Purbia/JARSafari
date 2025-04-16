@@ -2,17 +2,12 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/JARSafari";
+    const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/JARSAFARI";
     console.log(`Attempting to connect to MongoDB at: ${mongoURI}`);
     
     const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      family: 4,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      retryWrites: true,
-      w: 'majority'
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
@@ -33,7 +28,7 @@ const connectDB = async () => {
     
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);
-    console.error(`Error details: ${JSON.stringify(error, null, 2)}`);
+    console.error('Please make sure MongoDB is running and accessible');
     process.exit(1);
   }
 };

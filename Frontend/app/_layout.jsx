@@ -52,6 +52,12 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="ComingSoon"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
