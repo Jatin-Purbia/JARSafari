@@ -43,13 +43,14 @@ export default function LandingPage() {
           <Image
             source={require("../assets/images/NewLogo.png")}
             className="w-52 h-52 mb-0"
+    
           />
 
           {/* JARSafari Title */}
           <Text className="text-5xl font-extrabold text-center mb-2">
             <Text
               style={{
-                color: '#E0A800',
+                color: '#FFC107',
                 textShadowColor: '##FFC107',
                 textShadowOffset: { width: 1, height: 1 },
                 textShadowRadius: 2,
@@ -60,8 +61,7 @@ export default function LandingPage() {
             <Text style={{ color: '#000000' }}>afari</Text>
           </Text>
 
-          {/* Divider Line */}
-          <View className="w-48 h-1 bg-gray-400 mb-4 rounded-full" />
+         
 
           {/* Subtitle */}
           <Text className="text-lg text-gray-600 text-center mb-12 px-4">
@@ -69,9 +69,9 @@ export default function LandingPage() {
           </Text>
 
           {/* Action Button */}
-          <View className="w-full px-10">
+          <View className="w-full px-4">
             <Link href="/user-info" asChild>
-              <TouchableOpacity className="overflow-hidden rounded-xl w-full shadow-lg shadow-black/10 bg-[#FFC107] py-5">
+              <TouchableOpacity className="overflow-hidden rounded-2xl w-full shadow-lg shadow-black/10 bg-[#FFC107] py-5">
                 <Text className="text-black text-center text-2xl font-semibold">
                   Start Your Journey
                 </Text>
