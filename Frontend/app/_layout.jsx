@@ -52,6 +52,19 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="(tabs)/profile"
+        options={{
+          headerShown: false,
+        }}
+        />
+        <Stack.Screen
+        name="about"
+        options={{
+          headerShown: false,
+        }}
+      />
+      
     </Stack>
   );
 }

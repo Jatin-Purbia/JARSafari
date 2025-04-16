@@ -38,7 +38,7 @@ export default function Profile() {
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1 px-4">
         <View className="py-10 items-center">
-          <Text className="text-4xl font-extrabold text-black mb-8">My Profile</Text>
+          <Text className="text-4xl font-extrabold text-blue-500 mb-8">My Profile</Text>
 
           {/* Dynamic Avatar Circle */}
           <View style={{ backgroundColor: avatarColor }} className="w-24 h-24 rounded-full justify-center items-center mb-6 shadow-lg">
@@ -80,7 +80,7 @@ export default function Profile() {
             {/* View All Button */}
             {favorites.length > 3 && (
               <TouchableOpacity
-                className="bg-blue-600 p-3 rounded-full mt-4"
+                className="bg-blue-500 p-3 rounded-2xl mt-4"
                 onPress={toggleViewAll}
               >
                 <Text className="text-white text-center font-semibold text-lg">
@@ -92,14 +92,13 @@ export default function Profile() {
 
           {/* About Us Button */}
           <TouchableOpacity
-            className="bg-green-600 p-4 px-6 rounded-full shadow-md w-full mb-4 active:opacity-80"
-            onPress={() => Alert.alert('About Us', 'This is an app for managing and exploring your locations, preferences, and personal details.')}
+           className="bg-yellow-400 p-4 px-6 rounded-2xl shadow-md w-full mb-4 active:opacity-80"
+           onPress={() => router.push('/about')}
           >
-            <Text className="text-white text-center font-semibold text-lg tracking-wide">
-              About Us
-            </Text>
+          <Text className="text-black text-center font-semibold text-lg tracking-wide">
+           About Us
+          </Text>
           </TouchableOpacity>
-
           {/* Edit Button */}
           <TouchableOpacity
             className="bg-yellow-400 p-4 px-6 rounded-2xl shadow-md w-full active:opacity-80"

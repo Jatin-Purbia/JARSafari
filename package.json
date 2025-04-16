@@ -27,6 +27,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "expo": "^52.0.46",
     "expo-linear-gradient": "^14.0.2",
     "expo-secure-store": "^14.0.1",
     "express": "^5.1.0",

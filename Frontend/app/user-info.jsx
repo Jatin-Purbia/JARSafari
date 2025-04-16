@@ -38,7 +38,7 @@ export default function UserInfo() {
           <Image
             source={require('../assets/images/logo.png')}
             className="w-32 h-32 mb-8"
-            resizeMode="contain"
+
           />
           
           <Text className="text-3xl font-bold text-center mb-2">Welcome to JARSafari</Text>

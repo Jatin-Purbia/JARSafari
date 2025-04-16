@@ -3,7 +3,9 @@ import { Link } from "expo-router";
 import React, { useEffect, useRef } from "react";
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from "expo-router";
 import "../global.css";
+
 
 export default function LandingPage() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -23,7 +25,7 @@ export default function LandingPage() {
       }),
     ]).start();
   }, []);
-
+  const router = useRouter();
   return (
     <LinearGradient
       colors={['#FFFFFF', '#FFFFFF']}
@@ -31,13 +33,13 @@ export default function LandingPage() {
     >
       <StatusBar style="dark" translucent backgroundColor="transparent" />
 
-      <View className="flex-1 justify-center items-center px-6">
+      <View className="flex-1 justify-center items-center">
         <Animated.View
           style={{
             opacity: fadeAnim,
             transform: [{ translateY: slideAnim }],
           }}
-          className="items-center"
+          className="items-center w-full" 
         >
           {/* Logo Image */}
           <Image
@@ -58,7 +60,7 @@ export default function LandingPage() {
             >
               JARS
             </Text>
-            <Text style={{ color: '#000000' }}>afari</Text>
+            <Text style={{ color: '#FFC107' }}>afari</Text>
           </Text>
 
          
@@ -69,15 +71,16 @@ export default function LandingPage() {
           </Text>
 
           {/* Action Button */}
-          <View className="w-full px-4">
-            <Link href="/user-info" asChild>
-              <TouchableOpacity className="overflow-hidden rounded-2xl w-full shadow-lg shadow-black/10 bg-[#FFC107] py-5">
-                <Text className="text-black text-center text-2xl font-semibold">
-                  Start Your Journey
-                </Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
+          <View className="w-full px-6">
+  <TouchableOpacity
+    onPress={() => router.push("/user-info")}
+    className="rounded-2xl w-full shadow-lg shadow-black/10 bg-blue-500 py-5"
+  >
+    <Text className="text-white text-center text-2xl font-semibold">
+      Start Your Journey
+    </Text>
+  </TouchableOpacity>
+</View>
         </Animated.View>
       </View>
     </LinearGradient>

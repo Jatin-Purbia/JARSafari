@@ -357,7 +357,7 @@ export default function Homepage() {
                 <Image 
                   source={require('../../assets/images/logo.png')} 
                   className="w-24 h-24 mb-2"
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
                 <Text className="text-2xl font-bold text-black mb-1">JARSafari</Text>
                 <Text className="text-base text-gray-600 italic">
