@@ -1,7 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from "react-native";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPlanById, clearCurrentPlan } from "../../store/slices/planSlice";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Toast from "react-native-toast-message";
