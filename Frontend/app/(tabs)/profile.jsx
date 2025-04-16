@@ -35,8 +35,8 @@ export default function Profile() {
   const favoritesToDisplay = showAllFavorites ? favorites : favorites.slice(0, 3);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-4">
+    <SafeAreaView className="flex-1 bg-white px-6">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <View className="py-10 items-center">
           <Text className="text-4xl font-extrabold text-blue-500 mb-8">My Profile</Text>
 
