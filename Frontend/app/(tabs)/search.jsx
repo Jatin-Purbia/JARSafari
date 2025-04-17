@@ -26,10 +26,12 @@ const Search = () => {
     const [showFromSuggestions, setShowFromSuggestions] = useState(false);
     const [showToSuggestions, setShowToSuggestions] = useState(false);
     const [showStopSuggestions, setShowStopSuggestions] = useState(false);
+    const [showRouteInfo, setShowRouteInfo] = useState(false);
     const mapRef = useRef(null);
     const fromInputRef = useRef(null);
     const toInputRef = useRef(null);
     const stopInputRef = useRef(null);
+    const stopsScrollViewRef = useRef(null);
 
     // OSRM API endpoint
     const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1/foot';
@@ -116,21 +118,29 @@ const Search = () => {
     };
 
     const addStop = () => {
-        if (stopInput && locations.includes(stopInput) && !stops.includes(stopInput)) {
-            setStops([...stops, stopInput]);
-            setStopInput('');
-            setStopSuggestions([]);
-            setShowStopSuggestions(false);
-        } else if (stops.includes(stopInput)) {
-            ToastAndroid.show('Stop already added', ToastAndroid.SHORT);
+        if (stopInput && locations.includes(stopInput)) {
+            if (!stops.includes(stopInput)) {
+                const newStops = [...stops, stopInput];
+                setStops(newStops);
+                setStopInput('');
+                setStopSuggestions([]);
+                setShowStopSuggestions(false);
+                // Scroll to the end of the stops list after adding
+                setTimeout(() => {
+                    stopsScrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            } else {
+                ToastAndroid.show('Stop already added', ToastAndroid.SHORT);
+            }
         } else if (stopInput) {
             ToastAndroid.show('Invalid location. Please select from suggestions', ToastAndroid.SHORT);
         }
     };
 
     const removeStop = (index) => {
-        const newStops = stops.filter((_, i) => i !== index);
-        setStops(newStops);
+        const updated = [...stops];
+        updated.splice(index, 1);
+        setStops(updated);
     };
 
     const getCoordinatesFromLocationName = async (locationName) => {
@@ -183,33 +193,38 @@ const Search = () => {
                 const formattedCoordinates = coordinates.map(coord => coord.join(',')).join(';');
                 const apiUrl = `${OSRM_BASE_URL}/${formattedCoordinates}?geometries=geojson&overview=full`;
 
-                const response = await axios.get(apiUrl);
-                const data = response.data;
+                try {
+                    const response = await axios.get(apiUrl);
+                    const data = response.data;
 
-                if (data && data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    const segmentCoordinates = route.geometry.coordinates.map(p => ({
-                        latitude: p[1],
-                        longitude: p[0]
-                    }));
+                    if (data && data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        const segmentCoordinates = route.geometry.coordinates.map(p => ({
+                            latitude: p[1],
+                            longitude: p[0]
+                        }));
 
-                    allRouteSegments.push(segmentCoordinates);
-                    totalDistance += route.distance;
-                    totalDuration += route.duration;
+                        allRouteSegments.push(segmentCoordinates);
+                        totalDistance += route.distance;
+                        totalDuration += route.duration;
 
-                    // Calculate arrival time for this segment
-                    const segmentDuration = route.duration / 60; // in minutes
-                    const segmentDistance = route.distance / 1000; // in km
-                    
-                    segmentInfo.push({
-                        from: i === 0 ? (fromLocation || 'Your Location') : stops[i - 1],
-                        to: i === allPoints.length - 2 ? toLocation : stops[i],
-                        distance: segmentDistance.toFixed(1),
-                        duration: Math.ceil(segmentDuration),
-                        arrivalTime: new Date(Date.now() + totalDuration * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    });
-                } else {
-                    throw new Error(`No walkable route found between points ${i} and ${i + 1}.`);
+                        // Calculate arrival time for this segment
+                        const segmentDuration = route.duration / 60; // in minutes
+                        const segmentDistance = route.distance / 1000; // in km
+                        
+                        segmentInfo.push({
+                            from: i === 0 ? (fromLocation || 'Your Location') : stops[i - 1],
+                            to: i === allPoints.length - 2 ? toLocation : stops[i],
+                            distance: segmentDistance.toFixed(1),
+                            duration: Math.ceil(segmentDuration),
+                            arrivalTime: new Date(Date.now() + totalDuration * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        });
+                    } else {
+                        throw new Error(`No walkable route found between points ${i} and ${i + 1}.`);
+                    }
+                } catch (error) {
+                    console.error(`Error calculating segment ${i}:`, error);
+                    throw new Error(`Failed to calculate route segment: ${error.message}`);
                 }
             }
 
@@ -248,6 +263,10 @@ const Search = () => {
 
     const toggleControls = () => {
         setShowControls(!showControls);
+    };
+
+    const toggleRouteInfo = () => {
+        setShowRouteInfo(!showRouteInfo);
     };
 
     return (
@@ -303,46 +322,65 @@ const Search = () => {
                     )}
                 </View>
 
-                <View style={styles.stopsContainer}>
-                    <View style={styles.inputContainer}>
-                        <Ionicons name="add-circle" size={20} color="#666" />
-                        <TextInput
-                            ref={stopInputRef}
-                            style={styles.input}
-                            placeholder="Add Stop"
-                            value={stopInput}
-                            onChangeText={handleStopChange}
-                            onBlur={handleBlur}
-                            onFocus={() => setShowStopSuggestions(stopInput.length > 0 && filterLocations(stopInput).length > 0)}
-                        />
-                        {showStopSuggestions && stopSuggestions.length > 0 && (
-                            <ScrollView style={styles.suggestionsContainer}>
-                                {stopSuggestions.map((location, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={styles.suggestionItem}
-                                        onPress={() => selectStop(location)}>
-                                        <Text style={styles.suggestionText}>{location}</Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </ScrollView>
-                        )}
+                <View style={styles.stopsInputContainer}>
+                    {/* Input Row: Input + Add Button */}
+                    <View style={styles.inputRow}>
+                        <View style={styles.inputWithIcon}>
+                            <Ionicons name="location-outline" size={20} color="#666" />
+                            <TextInput
+                                ref={stopInputRef}
+                                style={styles.stopInput}
+                                placeholder="Add Stop"
+                                value={stopInput}
+                                onChangeText={(text) => {
+                                    setStopInput(text);
+                                    setShowStopSuggestions(text.length > 0 && filterLocations(text).length > 0);
+                                    setStopSuggestions(filterLocations(text));
+                                }}
+                                onBlur={() => setShowStopSuggestions(false)}
+                                onFocus={() => setShowStopSuggestions(stopInput.length > 0 && filterLocations(stopInput).length > 0)}
+                            />
+                        </View>
+
+                        {/* Add Button */}
+                        <TouchableOpacity
+                            style={styles.addButton}
+                            onPress={addStop}>
+                            <Ionicons name="add" size={24} color="white" />
+                        </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.addButton} onPress={addStop}>
-                        <Ionicons name="add" size={24} color="white" />
-                    </TouchableOpacity>
+
+                    {/* Suggestions Dropdown */}
+                    {showStopSuggestions && stopSuggestions.length > 0 && (
+                        <ScrollView style={styles.suggestionsContainer}>
+                            {stopSuggestions.map((location, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.suggestionItem}
+                                    onPress={() => {
+                                        setStopInput(location);
+                                        setShowStopSuggestions(false);
+                                    }}>
+                                    <Text style={styles.suggestionText}>{location}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
                 </View>
 
+                {/* Display Added Stops */}
                 {stops.length > 0 && (
-                    <View style={styles.stopsList}>
-                        {stops.map((stop, index) => (
-                            <View key={index} style={styles.stopItem}>
-                                <Text style={styles.stopText}>{stop}</Text>
-                                <TouchableOpacity onPress={() => removeStop(index)}>
-                                    <Ionicons name="close-circle" size={20} color="#666" />
-                                </TouchableOpacity>
-                            </View>
-                        ))}
+                    <View style={styles.stopsListContainer}>
+                        <ScrollView ref={stopsScrollViewRef} horizontal={true} contentContainerStyle={styles.stopsListContent}>
+                            {stops.map((stop, index) => (
+                                <View key={index} style={styles.stopItem}>
+                                    <Text style={styles.stopText}>{stop}</Text>
+                                    <TouchableOpacity onPress={() => removeStop(index)}>
+                                        <Ionicons name="close-circle" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </ScrollView>
                     </View>
                 )}
 
@@ -358,7 +396,7 @@ const Search = () => {
 
             <MapView
                 ref={mapRef}
-                style={[styles.map, { paddingBottom: 100 }]}
+                style={styles.map}
                 mapType={mapType}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
@@ -437,12 +475,35 @@ const Search = () => {
             )}
 
             {error && (
-                <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
+                <View style={styles.errorText}>
+                    <Text>{error}</Text>
                 </View>
             )}
 
-            {routeInfo && showControls && (
+            {routeInfo && (
+                <View style={styles.controls}>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={toggleMapType}>
+                        <Ionicons
+                            name={mapType === 'standard' ? 'earth' : 'map'}
+                            size={24}
+                            color="#F59E0B"
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={toggleRouteInfo}>
+                        <Ionicons
+                            name={showRouteInfo ? 'information-circle' : 'information-circle-outline'}
+                            size={24}
+                            color="#F59E0B"
+                        />
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {routeInfo && showRouteInfo && (
                 <View style={styles.infoPanel}>
                     <View style={styles.infoHeader}>
                         <Text style={styles.infoTitle}>Route Information</Text>
@@ -451,7 +512,7 @@ const Search = () => {
                             <Text style={styles.timeLabel}>Arrival: {routeInfo.estimatedArrival}</Text>
                         </View>
                     </View>
-                    
+
                     <View style={styles.infoRow}>
                         <View style={styles.infoItem}>
                             <Ionicons name="walk" size={24} color="#F59E0B" />
@@ -489,20 +550,6 @@ const Search = () => {
                     </ScrollView>
                 </View>
             )}
-
-            {showControls && (
-                <View style={styles.controls}>
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={toggleMapType}>
-                        <Ionicons
-                            name={mapType === 'standard' ? 'earth' : 'map'}
-                            size={24}
-                            color="#F59E0B"
-                        />
-                    </TouchableOpacity>
-                </View>
-            )}
         </View>
     );
 };
@@ -511,7 +558,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingTop: 20,
-        paddingBottom: 100,
     },
     searchContainer: {
         padding: 15,
@@ -528,7 +574,17 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         position: 'relative',
     },
+    inputWithIcon: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
     input: {
+        flex: 1,
+        marginLeft: 10,
+        fontSize: 16,
+    },
+    stopInput: {
         flex: 1,
         marginLeft: 10,
         fontSize: 16,
@@ -558,22 +614,28 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
     },
-    stopsContainer: {
+    stopsInputContainer: {
+        marginBottom: 10,
+    },
+    inputRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     addButton: {
-        backgroundColor: '#F59E0B',
+        backgroundColor: '#007AFF',
         padding: 10,
-        borderRadius: 8,
+        borderRadius: 50,
         marginLeft: 10,
-        width: 44,
-        height: 44,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    stopsList: {
+    stopsListContainer: {
         marginTop: 10,
+        height: 40, // Adjust height as needed
+    },
+    stopsListContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     stopItem: {
         flexDirection: 'row',
@@ -582,7 +644,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         padding: 10,
         borderRadius: 8,
-        marginBottom: 5,
+        marginRight: 5,
     },
     stopText: {
         fontSize: 16,
@@ -643,7 +705,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 5,
-        maxHeight: '40%',
+        maxHeight: '50%',
         zIndex: 1,
     },
     infoHeader: {
@@ -688,12 +750,12 @@ const styles = StyleSheet.create({
         top: 20,
         right: 20,
         flexDirection: 'column',
+        gap: 10,
     },
     controlButton: {
         backgroundColor: 'white',
         padding: 10,
         borderRadius: 8,
-        marginBottom: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -727,13 +789,14 @@ const styles = StyleSheet.create({
     },
     segmentsContainer: {
         marginTop: 10,
-        maxHeight: 150,
+        maxHeight: 200,
     },
     segmentItem: {
         backgroundColor: '#f8f8f8',
         borderRadius: 8,
         padding: 10,
         marginBottom: 8,
+        marginRight: 5,
     },
     segmentHeader: {
         flexDirection: 'row',
@@ -754,15 +817,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        flexWrap: 'wrap',
     },
     segmentRoute: {
         fontSize: 12,
         color: '#666',
         flex: 1,
+        marginRight: 10,
     },
     segmentMetrics: {
         flexDirection: 'row',
         gap: 10,
+        marginTop: 5,
     },
     segmentMetric: {
         fontSize: 12,
