@@ -114,7 +114,7 @@ const Search = () => {
             setShowFromSuggestions(false);
             setShowToSuggestions(false);
             setShowStopSuggestions(false);
-        }, 200);
+        }, 300);
     };
 
     const addStop = () => {
@@ -289,7 +289,8 @@ const Search = () => {
                                 <TouchableOpacity
                                     key={index}
                                     style={styles.suggestionItem}
-                                    onPress={() => selectFromLocation(location)}>
+                                    onPress={() => selectFromLocation(location)}
+                                    activeOpacity={1}>
                                     <Text style={styles.suggestionText}>{location}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -314,7 +315,8 @@ const Search = () => {
                                 <TouchableOpacity
                                     key={index}
                                     style={styles.suggestionItem}
-                                    onPress={() => selectToLocation(location)}>
+                                    onPress={() => selectToLocation(location)}
+                                    activeOpacity={1}>
                                     <Text style={styles.suggestionText}>{location}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -323,7 +325,6 @@ const Search = () => {
                 </View>
 
                 <View style={styles.stopsInputContainer}>
-                    {/* Input Row: Input + Add Button */}
                     <View style={styles.inputRow}>
                         <View style={styles.inputWithIcon}>
                             <Ionicons name="location-outline" size={20} color="#666" />
@@ -337,12 +338,10 @@ const Search = () => {
                                     setShowStopSuggestions(text.length > 0 && filterLocations(text).length > 0);
                                     setStopSuggestions(filterLocations(text));
                                 }}
-                                onBlur={() => setShowStopSuggestions(false)}
+                                onBlur={handleBlur}
                                 onFocus={() => setShowStopSuggestions(stopInput.length > 0 && filterLocations(stopInput).length > 0)}
                             />
                         </View>
-
-                        {/* Add Button */}
                         <TouchableOpacity
                             style={styles.addButton}
                             onPress={addStop}>
@@ -350,17 +349,14 @@ const Search = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Suggestions Dropdown */}
                     {showStopSuggestions && stopSuggestions.length > 0 && (
                         <ScrollView style={styles.suggestionsContainer}>
                             {stopSuggestions.map((location, index) => (
                                 <TouchableOpacity
                                     key={index}
                                     style={styles.suggestionItem}
-                                    onPress={() => {
-                                        setStopInput(location);
-                                        setShowStopSuggestions(false);
-                                    }}>
+                                    onPress={() => selectStop(location)}
+                                    activeOpacity={1}>
                                     <Text style={styles.suggestionText}>{location}</Text>
                                 </TouchableOpacity>
                             ))}
