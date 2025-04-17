@@ -73,6 +73,13 @@ export default function Layout() {
           presentation: 'fullScreenModal',
         }}
       />
+      <Stack.Screen
+        name="ComingSoon"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}  
+      />
     </Stack>
   );
 }

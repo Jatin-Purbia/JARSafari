@@ -46,7 +46,7 @@ export default function ComingSoon() {
         <View className="items-center mb-8">
           <Image 
             source={require('../assets/images/logo.png')} 
-            className="w-32 h-32 mb-4"
+            className="w-40 h-40 mb-4"
             resizeMode="contain"
           />
           <Text className="text-3xl font-bold text-black mb-2">Coming Soon!</Text>

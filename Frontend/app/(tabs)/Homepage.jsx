@@ -306,6 +306,7 @@ export default function Homepage() {
       }
     });
   };
+  
 
   // Handle Plan a Trip button press
   const handlePlanTripPress = () => {
