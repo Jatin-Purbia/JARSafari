@@ -52,6 +52,27 @@ export default function Layout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="about"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="contact"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="privacy"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
     </Stack>
   );
 }

@@ -34,7 +34,7 @@ const Search = () => {
     const stopsScrollViewRef = useRef(null);
 
     // OSRM API endpoint
-    const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1/foot';
+    const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1/foot';   //open street route map
 
     useEffect(() => {
         const getLocation = async () => {

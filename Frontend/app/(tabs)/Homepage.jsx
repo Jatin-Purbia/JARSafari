@@ -508,19 +508,19 @@ export default function Homepage() {
               <View className="px-6 mb-6">
                 <TouchableOpacity
                   onPress={handlePlanTripPress}
-                  className="overflow-hidden rounded-2xl shadow-md"
+                  className="overflow-hidden rounded-2xl shadow-lg"
                 >
                   <LinearGradient
                     colors={['#FCD34D', '#F59E0B']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className="py-4 items-center"
+                    className="py-4 px-6 flex-row items-center justify-center space-x-2"
                   >
-                    <Text className="text-black font-bold text-lg">Plan a Trip</Text>
-                    <Text className="text-black text-sm mt-1">Coming Soon</Text>
+                    <Text className="text-black font-bold text-xl">Plan a Trip</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
+
             </>
           )}
           ListFooterComponent={() => <View style={{ height: 100 }} />}

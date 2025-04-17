@@ -86,29 +86,26 @@ export default function Favorites() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="bg-white p-4 shadow-md flex-row justify-between items-center">
+      <View className="bg-white p-4 shadow-md gap-5 flex-row justify-between items-center">
         {/* Header Section with Title and Done Button */}
         <View style={{ flex: 1 }}>
           <Text className="text-2xl font-bold">Select Your Favorites</Text>
-          <Text className="text-gray-600 mb-4">
+          <Text className="text-gray-600 mb-4 mt-5">
             Choose your frequently visited locations to get personalized recommendations
           </Text>
         </View>
 
         {/* Done Button */}
         <TouchableOpacity
-          className="bg-blue-500 p-3 rounded-lg"
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            height: 40,
-            borderRadius: 20,
-          }}
           onPress={handleContinue}
+          className="bg-blue-600 justify-center items-center mt-8 px-6 h-12 rounded-xl shadow-md"  
         >
-          <Text className="text-white text-sm font-semibold">Done</Text>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+            Done
+          </Text>
         </TouchableOpacity>
+
+
       </View>
 
       <ScrollView className="flex-1 px-4">
