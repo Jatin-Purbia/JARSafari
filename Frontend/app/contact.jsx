@@ -23,16 +23,15 @@ export default function ContactUs() {
       </TouchableOpacity>
     </View>
   );
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }} className="px-4 py-10">
         {/* Logo */}
-        <View className="items-center mb-6">
+        <View className="items-center mb-2">
           <Image
             source={require('../assets/images/logo.png')}
-            style={{ width: 120, height: 80 }}
-            resizeMode="contain"
+            style={{ width: 100, height: 100 }}
+            resizeMode="cover"
           />
         </View>
 
@@ -53,8 +52,8 @@ export default function ContactUs() {
           <Text className="text-2xl font-semibold text-gray-800 mt-2">Jatin Purbia</Text>
           <Text className="text-lg text-gray-700 mt-1">Founder & CTO</Text>
           <SocialLinks
-            githubUrl="https://github.com/jatinpurbia"
-            linkedinUrl="https://linkedin.com/in/jatinpurbia"
+            githubUrl="https://github.com/Jatin-Purbia"
+            linkedinUrl="https://www.linkedin.com/in/jatin-purbia-355210212/"
           />
           <Text className="text-base text-gray-800 text-center mt-2">
             Full-stack developer with expertise in React, React-Native, Shopify, and WordPress.
@@ -64,16 +63,17 @@ export default function ContactUs() {
         {/* Rahul & Sharana */}
         <View className="flex-row justify-between mb-8">
           {/* Rahul */}
-          <View className="flex-1 items-center mr-2">
+          <View className="flex-1 items-center mr-2  before:">
             <Image
-              source={require('../assets/images/jatin.jpg')} // Replace with Rahul's image
-              style={{ width: 120, height: 120, borderRadius: 60 }}
+              source={require('../assets/images/rahul.png')} // Replace with Rahul's image
+              style={{ width: 120, height: 120, borderRadius: 60  }}
+
             />
             <Text className="text-xl font-semibold text-gray-800 mt-2">Rahul Ahuja</Text>
             <Text className="text-gray-700 mt-1">Co-Founder & CFO</Text>
             <SocialLinks
-              githubUrl="https://github.com/rahulahuja"
-              linkedinUrl="https://linkedin.com/in/rahulahuja"
+              githubUrl="https://github.com/b23ch1037"
+              linkedinUrl="https://www.linkedin.com/in/rahul-ahuja-47397928a/"
             />
             <Text className="text-center text-sm text-gray-800 mt-2">
               Skilled in frontend and UI/UX using Figma.
@@ -83,14 +83,14 @@ export default function ContactUs() {
           {/* Sharana */}
           <View className="flex-1 items-center ml-2">
             <Image
-              source={require('../assets/images/jatin.jpg')} // Replace with Sharana's image
+              source={require('../assets/images/sharan.png')} // Replace with Sharana's image
               style={{ width: 120, height: 120, borderRadius: 60 }}
             />
-            <Text className="text-xl font-semibold text-gray-800 mt-2">Sharana Lakshetty</Text>
+            <Text className="text-xl font-semibold text-gray-800 mt-2">Sharan Lakshetty</Text>
             <Text className="text-gray-700 mt-1">Co-Founder & COO</Text>
             <SocialLinks
-              githubUrl="https://github.com/sharanalakshetty"
-              linkedinUrl="https://linkedin.com/in/sharanalakshetty"
+              githubUrl="https://github.com/Sharan4405"
+              linkedinUrl="https://www.linkedin.com/in/sharan-lakshetty-a0b8b02aa/"
             />
             <Text className="text-center text-sm text-gray-800 mt-2">
               Frontend developer & creative designer.
@@ -107,8 +107,8 @@ export default function ContactUs() {
           <Text className="text-2xl font-semibold text-gray-800 mt-2">Ayush Gupta</Text>
           <Text className="text-lg text-gray-700 mt-1">Co-Founder</Text>
           <SocialLinks
-            githubUrl="https://github.com/ayushgupta"
-            linkedinUrl="https://linkedin.com/in/ayushgupta"
+            githubUrl="https://github.com/ayushgupta67"
+            linkedinUrl="https://www.linkedin.com/in/ayush-gupta-93253328a/"
           />
           <Text className="text-base text-gray-800 text-center mt-2">
             Frontend expert ensuring smooth UI.

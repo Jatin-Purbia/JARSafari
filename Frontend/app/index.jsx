@@ -58,9 +58,8 @@ export default function LandingPage() {
                 textShadowRadius: 2,
               }}
             >
-              JARS
+              JARSafari
             </Text>
-            <Text style={{ color: '#FFC107' }}>afari</Text>
           </Text>
 
          
