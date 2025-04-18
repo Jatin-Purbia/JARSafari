@@ -79,13 +79,53 @@
 
 ```
 Frontend/
-├── assets/
-│   └── app_view/          # App screenshots and UI assets
-├── app/                   # Main application code
-│   ├── components/        # Reusable UI components
-│   ├── screens/          # Individual app screens
-│   ├── navigation/       # Navigation configuration
-│   └── utils/            # Utility functions and helpers
-├── package.json          # Project dependencies
-└── README.md            # Project documentation
+├── src/                      # Source code
+│   ├── assets/              # Static assets
+│   │   ├── app_view/        # App screenshots and UI assets
+│   │   ├── icons/           # Icon assets
+│   │   └── images/          # Image assets
+│   ├── components/          # Reusable UI components
+│   │   ├── common/          # Shared components
+│   │   ├── navigation/      # Navigation components
+│   │   └── screens/         # Screen-specific components
+│   ├── screens/             # Screen components
+│   │   ├── home/           # Home screen and related components
+│   │   ├── navigation/     # Navigation screen and related components
+│   │   ├── favorites/      # Favorites screen and related components
+│   │   └── settings/       # Settings screen and related components
+│   ├── navigation/          # Navigation configuration
+│   │   ├── AppNavigator.js # Main navigation setup
+│   │   └── routes.js       # Route definitions
+│   ├── services/           # API and external services
+│   │   ├── api/           # API client and endpoints
+│   │   ├── location/      # Location services
+│   │   └── storage/       # Local storage services
+│   ├── store/             # State management
+│   │   ├── actions/       # Redux actions
+│   │   ├── reducers/      # Redux reducers
+│   │   └── selectors/     # Redux selectors
+│   ├── utils/             # Utility functions
+│   │   ├── constants/     # App constants
+│   │   ├── helpers/       # Helper functions
+│   │   └── types/         # TypeScript types/Flow types
+│   └── theme/             # Theme configuration
+│       ├── colors.js      # Color palette
+│       ├── typography.js  # Typography styles
+│       └── spacing.js     # Spacing constants
+├── tests/                 # Test files
+│   ├── components/        # Component tests
+│   ├── screens/          # Screen tests
+│   └── utils/            # Utility tests
+├── docs/                 # Documentation
+│   ├── api/             # API documentation
+│   └── guides/          # Development guides
+├── .github/             # GitHub configuration
+│   └── workflows/       # GitHub Actions workflows
+├── .eslintrc.js         # ESLint configuration
+├── .prettierrc          # Prettier configuration
+├── babel.config.js      # Babel configuration
+├── metro.config.js      # Metro bundler configuration
+├── package.json         # Project dependencies
+├── tsconfig.json        # TypeScript configuration
+└── README.md           # Project documentation
 ```
