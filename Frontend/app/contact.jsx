@@ -23,16 +23,15 @@ export default function ContactUs() {
       </TouchableOpacity>
     </View>
   );
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }} className="px-4 py-10">
         {/* Logo */}
-        <View className="items-center mb-6">
+        <View className="items-center mb-2">
           <Image
             source={require('../assets/images/logo.png')}
-            style={{ width: 120, height: 80 }}
-            resizeMode="contain"
+            style={{ width: 100, height: 100 }}
+            resizeMode="cover"
           />
         </View>
 
@@ -64,10 +63,11 @@ export default function ContactUs() {
         {/* Rahul & Sharana */}
         <View className="flex-row justify-between mb-8">
           {/* Rahul */}
-          <View className="flex-1 items-center mr-2">
+          <View className="flex-1 items-center mr-2  before:">
             <Image
-              source={require('../assets/images/jatin.jpg')} // Replace with Rahul's image
-              style={{ width: 120, height: 120, borderRadius: 60 }}
+              source={require('../assets/images/rahul.png')} // Replace with Rahul's image
+              style={{ width: 120, height: 120, borderRadius: 60  }}
+
             />
             <Text className="text-xl font-semibold text-gray-800 mt-2">Rahul Ahuja</Text>
             <Text className="text-gray-700 mt-1">Co-Founder & CFO</Text>
@@ -83,14 +83,14 @@ export default function ContactUs() {
           {/* Sharana */}
           <View className="flex-1 items-center ml-2">
             <Image
-              source={require('../assets/images/jatin.jpg')} // Replace with Sharana's image
+              source={require('../assets/images/sharan.png')} // Replace with Sharana's image
               style={{ width: 120, height: 120, borderRadius: 60 }}
             />
-            <Text className="text-xl font-semibold text-gray-800 mt-2">Sharana Lakshetty</Text>
+            <Text className="text-xl font-semibold text-gray-800 mt-2">Sharan Lakshetty</Text>
             <Text className="text-gray-700 mt-1">Co-Founder</Text>
             <SocialLinks
-              githubUrl="https://github.com/sharanalakshetty"
-              linkedinUrl="https://linkedin.com/in/sharanalakshetty"
+              githubUrl="https://github.com/sharanlakshetty"
+              linkedinUrl="https://linkedin.com/in/sharanlakshetty"
             />
             <Text className="text-center text-sm text-gray-800 mt-2">
               Frontend developer & creative designer.

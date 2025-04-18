@@ -31,8 +31,8 @@ export default function Profile() {
   const avatarColor = getColorForInitial(initial);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-4">
+    <SafeAreaView className="flex-1 bg-white px-6">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <View className="py-10 items-center">
           <Text className="text-4xl font-extrabold text-blue-500 mb-6">My Profile</Text>
 
@@ -83,14 +83,8 @@ const ProfileField = ({ label, value }) => (
 
 const CustomButton = ({ title, onPress }) => (
   <TouchableOpacity
-    className=" py-4 px-2 rounded-2xl shadow w-full active:opacity-90"
-    onPress={onPress}
-    style={{
-                borderWidth: 1,
-                borderColor: 'black', // Tailwind's gray-200
-                borderRadius: 10,
-                gap: 12
-              }}
+  className="py-4 px-2 rounded-2xl shadow w-full active:opacity-90 border bg-slate-200 border-black"
+  onPress={onPress}
   >
     <Text className="text-black text-left font-semibold text-lg tracking-wide">
       {title}

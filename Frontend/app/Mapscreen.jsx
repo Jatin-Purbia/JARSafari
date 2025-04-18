@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 import axios from 'axios';
 import { ToastAndroid } from 'react-native';
 
+
 // Import location coordinates
 import { locationCoordinates } from '../app/data/locationData';
 
