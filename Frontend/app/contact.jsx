@@ -87,7 +87,7 @@ export default function ContactUs() {
               style={{ width: 120, height: 120, borderRadius: 60 }}
             />
             <Text className="text-xl font-semibold text-gray-800 mt-2">Sharana Lakshetty</Text>
-            <Text className="text-gray-700 mt-1">Co-Founder</Text>
+            <Text className="text-gray-700 mt-1">Co-Founder & COO</Text>
             <SocialLinks
               githubUrl="https://github.com/sharanalakshetty"
               linkedinUrl="https://linkedin.com/in/sharanalakshetty"
@@ -101,11 +101,11 @@ export default function ContactUs() {
         {/* Ayush */}
         <View className="items-center mb-8">
           <Image
-            source={require('../assets/images/jatin.jpg')} // Replace with Ayush's image
+            source={require('../assets/images/ayush.jpg')} // Replace with Ayush's image
             style={{ width: 120, height: 120, borderRadius: 60 }}
           />
           <Text className="text-2xl font-semibold text-gray-800 mt-2">Ayush Gupta</Text>
-          <Text className="text-lg text-gray-700 mt-1">Senior Developer</Text>
+          <Text className="text-lg text-gray-700 mt-1">Co-Founder</Text>
           <SocialLinks
             githubUrl="https://github.com/ayushgupta"
             linkedinUrl="https://linkedin.com/in/ayushgupta"
