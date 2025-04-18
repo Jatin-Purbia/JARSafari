@@ -1,622 +1,839 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, ToastAndroid } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from 'react-native-webview';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import MapView, { Marker, Polyline } from 'react-native-maps';
+import * as Location from 'expo-location';
+import axios from 'axios';
+import { locationCoordinates, locations } from '../data/locationData';
 
-// Import location data from the data file
-import { 
-  locations, 
-  campusGraph, 
-  locationCoordinates,
-  IITJ_CENTER,
-  getLocationType,
-  getLocationIcon,
-  findShortestPath
-} from '../data/locationData';
+const Search = () => {
+    const router = useRouter();
+    const [fromLocation, setFromLocation] = useState('');
+    const [toLocation, setToLocation] = useState('');
+    const [stops, setStops] = useState([]);
+    const [stopInput, setStopInput] = useState('');
+    const [routeCoordinates, setRouteCoordinates] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [mapType, setMapType] = useState('standard');
+    const [showControls, setShowControls] = useState(true);
+    const [routeInfo, setRouteInfo] = useState(null);
+    const [userLocation, setUserLocation] = useState(null);
+    const [fromSuggestions, setFromSuggestions] = useState([]);
+    const [toSuggestions, setToSuggestions] = useState([]);
+    const [stopSuggestions, setStopSuggestions] = useState([]);
+    const [showFromSuggestions, setShowFromSuggestions] = useState(false);
+    const [showToSuggestions, setShowToSuggestions] = useState(false);
+    const [showStopSuggestions, setShowStopSuggestions] = useState(false);
+    const [showRouteInfo, setShowRouteInfo] = useState(false);
+    const mapRef = useRef(null);
+    const fromInputRef = useRef(null);
+    const toInputRef = useRef(null);
+    const stopInputRef = useRef(null);
+    const stopsScrollViewRef = useRef(null);
 
-// Dijkstra's algorithm implementation
-function dijkstra(graph, start, end) {
-  const distances = {};
-  const previous = {};
-  const nodes = new Set();
-  const path = [];
-  
-  // Initialize distances and nodes
-  for (const node in graph) {
-    distances[node] = node === start ? 0 : Infinity;
-    previous[node] = null;
-    nodes.add(node);
-  }
-  
-  while (nodes.size > 0) {
-    // Find the node with the smallest distance
-    let minNode = null;
-    let minDistance = Infinity;
-    
-    for (const node of nodes) {
-      if (distances[node] < minDistance) {
-        minDistance = distances[node];
-        minNode = node;
-      }
-    }
-    
-    // If we've reached the end or there's no path
-    if (minNode === null || minNode === end) {
-      break;
-    }
-    
-    nodes.delete(minNode);
-    
-    // Update distances to neighbors
-    for (const neighbor in graph[minNode]) {
-      if (nodes.has(neighbor)) {
-        const distance = distances[minNode] + graph[minNode][neighbor];
-        
-        if (distance < distances[neighbor]) {
-          distances[neighbor] = distance;
-          previous[neighbor] = minNode;
-        }
-      }
-    }
-  }
-  
-  // Reconstruct path
-  let current = end;
-  while (current !== null) {
-    path.unshift(current);
-    current = previous[current];
-  }
-  
-  // If no path found
-  if (path[0] !== start) {
-    return { path: [], distance: Infinity, time: 0 };
-  }
-  
-  // Calculate total distance and estimated time (assuming 4 km/h walking speed)
-  const distance = distances[end];
-  const timeMinutes = Math.round((distance / 4) * 60); // Convert to minutes
-  
-  return { path, distance, time: timeMinutes };
-}
+    // OSRM API endpoint
+    const OSRM_BASE_URL = 'https://router.project-osrm.org/route/v1/foot';   //open street route map
 
-const SearchScreen = () => {
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const [fromLocation, setFromLocation] = useState(params.from || '');
-  const [toLocation, setToLocation] = useState(params.to || '');
-  const [route, setRoute] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showGoogleEarth, setShowGoogleEarth] = useState(false);
-  const [error, setError] = useState(null);
-  
-  // Autocomplete states
-  const [fromSuggestions, setFromSuggestions] = useState([]);
-  const [toSuggestions, setToSuggestions] = useState([]);
-  const [showFromSuggestions, setShowFromSuggestions] = useState(false);
-  const [showToSuggestions, setShowToSuggestions] = useState(false);
+    useEffect(() => {
+        const getLocation = async () => {
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    setError('Permission to access location was denied');
+                    return;
+                }
 
-  // Get all available locations
-  const availableLocations = locations;
-
-  // Filter locations based on input
-  const filterLocations = (input, locations) => {
-    if (!input) return [];
-    const lowerInput = input.toLowerCase();
-    return locations.filter(location => 
-      location && typeof location === 'string' && location.toLowerCase().includes(lowerInput)
-    );
-  };
-
-  // Handle from location input change
-  const handleFromLocationChange = (text) => {
-    setFromLocation(text);
-    setFromSuggestions(filterLocations(text, availableLocations));
-    setShowFromSuggestions(true);
-  };
-
-  // Handle to location input change
-  const handleToLocationChange = (text) => {
-    setToLocation(text);
-    setToSuggestions(filterLocations(text, availableLocations));
-    setShowToSuggestions(true);
-  };
-
-  // Select from location suggestion
-  const selectFromLocation = (location) => {
-    setFromLocation(location);
-    setShowFromSuggestions(false);
-  };
-
-  // Select to location suggestion
-  const selectToLocation = (location) => {
-    setToLocation(location);
-    setShowToSuggestions(false);
-  };
-
-  // Generate Google Earth HTML
-  const generateGoogleEarthHTML = () => {
-    if (!route || route.path.length === 0) return '';
-    
-    const startCoords = locationCoordinates[route.path[0]];
-    const endCoords = locationCoordinates[route.path[route.path.length - 1]];
-    
-    // Create path coordinates for the route
-    const pathCoordinates = route.path.map(location => {
-      const coords = locationCoordinates[location];
-      return { lat: coords.latitude, lng: coords.longitude };
-    });
-
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            html, body, #map { height: 100%; margin: 0; padding: 0; }
-            #map { width: 100%; }
-            .loading {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              font-family: Arial, sans-serif;
-              color: #666;
+                const location = await Location.getCurrentPositionAsync({});
+                setUserLocation({
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude,
+                });
+            } catch (error) {
+                console.error('Error getting location:', error);
+                setError('Could not get your location');
             }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <div id="loading" class="loading">Loading map...</div>
-          <script>
-            let map;
-            let markers = [];
-            let pathLine;
-
-            function initMap() {
-              try {
-                map = new google.maps.Map(document.getElementById('map'), {
-                  center: { lat: ${IITJ_CENTER.latitude}, lng: ${IITJ_CENTER.longitude} },
-                  zoom: 16,
-                  mapTypeId: 'satellite',
-                  tilt: 45
-                });
-
-                // Add start marker
-                markers.push(new google.maps.Marker({
-                  position: { lat: ${startCoords.latitude}, lng: ${startCoords.longitude} },
-                  map: map,
-                  title: '${route.path[0]}',
-                  icon: {
-                    url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
-                  }
-                }));
-
-                // Add end marker
-                markers.push(new google.maps.Marker({
-                  position: { lat: ${endCoords.latitude}, lng: ${endCoords.longitude} },
-                  map: map,
-                  title: '${route.path[route.path.length - 1]}',
-                  icon: {
-                    url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-                  }
-                }));
-
-                // Add route path
-                pathLine = new google.maps.Polyline({
-                  path: ${JSON.stringify(pathCoordinates)},
-                  geodesic: true,
-                  strokeColor: '#F59E0B',
-                  strokeOpacity: 1.0,
-                  strokeWeight: 3
-                });
-                pathLine.setMap(map);
-
-                // Add all buildings as markers
-                const buildings = ${JSON.stringify(Object.entries(locationCoordinates).map(([name, coords]) => ({
-                  name,
-                  position: { lat: coords.latitude, lng: coords.longitude }
-                })))};
-
-                buildings.forEach(building => {
-                  markers.push(new google.maps.Marker({
-                    position: building.position,
-                    map: map,
-                    title: building.name,
-                    icon: {
-                      url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-                    }
-                  }));
-                });
-
-                // Fit map to show the entire route
-                const bounds = new google.maps.LatLngBounds();
-                pathCoordinates.forEach(coord => {
-                  bounds.extend(coord);
-                });
-                map.fitBounds(bounds, { padding: 50 });
-
-                // Hide loading message
-                document.getElementById('loading').style.display = 'none';
-              } catch (error) {
-                console.error('Error initializing map:', error);
-                document.getElementById('loading').textContent = 'Error loading map: ' + error.message;
-              }
-            }
-
-            function handleMapError() {
-              document.getElementById('loading').textContent = 'Error loading Google Maps. Please check your internet connection.';
-            }
-          </script>
-          <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAQhelQ56ilkCodWB5Wyi9hNKI_eb5p4hQ&callback=initMap"
-            onerror="handleMapError()">
-          </script>
-        </body>
-      </html>
-    `;
-  };
-
-  // Handle search for route
-  const handleSearch = async () => {
-    if (!fromLocation || !toLocation) {
-      Alert.alert('Error', 'Please enter both starting and destination points');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Get coordinates for start and end points
-      const startCoords = locationCoordinates[fromLocation];
-      const endCoords = locationCoordinates[toLocation];
-
-      if (!startCoords || !endCoords) {
-        Alert.alert('Error', 'Invalid locations selected');
-        setIsLoading(false);
-        return;
-      }
-
-      // Find the shortest path using Dijkstra's algorithm
-      const path = findShortestPath(fromLocation, toLocation);
-      
-      if (path.path.length === 0) {
-        Alert.alert('Error', 'No walkable path found between the selected locations. Please try different locations.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Calculate total distance and estimated time
-      const totalDistance = path.distance;
-      const walkingSpeed = 5; // km/h
-      const estimatedTime = Math.ceil((totalDistance / walkingSpeed) * 60); // minutes
-
-      // Generate route steps
-      const steps = path.path.map((location, index) => {
-        const nextLocation = path.path[index + 1];
-        if (!nextLocation) return null;
-        
-        const distance = Math.max(campusGraph[location][nextLocation], 0.1); // Minimum 0.1 km
-        const duration = Math.max(Math.ceil((distance / 5) * 60), 1); // Minimum 1 minute
-        
-        return {
-          instruction: `Go to ${nextLocation}`,
-          distance: `${distance.toFixed(1)} km`,
-          duration: `${duration} minutes`
         };
-      }).filter(step => step !== null);
 
-      setRoute({
-        path: path.path,
-        distance: Math.max(totalDistance, 0.1), // Ensure minimum total distance
-        time: Math.max(estimatedTime, 1), // Ensure minimum total time
-        steps
-      });
+        getLocation();
+    }, []);
 
-      // Navigate to Mapscreen with route parameters
-      router.push({
-        pathname: "/Mapscreen",
-        params: { 
-          destination: toLocation,
-          userLatitude: startCoords.latitude,
-          userLongitude: startCoords.longitude,
-          path: JSON.stringify(path.path),
-          distance: totalDistance,
-          time: estimatedTime,
-          steps: JSON.stringify(steps)
+    const filterLocations = (input) => {
+        if (!input) return [];
+        const searchTerm = input.toLowerCase().trim();
+        return locations.filter(location =>
+            location.toLowerCase().includes(searchTerm)
+        );
+    };
+
+    const handleFromLocationChange = (text) => {
+        setFromLocation(text);
+        const suggestions = filterLocations(text);
+        setFromSuggestions(suggestions);
+        setShowFromSuggestions(true);
+    };
+
+    const handleToLocationChange = (text) => {
+        setToLocation(text);
+        const suggestions = filterLocations(text);
+        setToSuggestions(suggestions);
+        setShowToSuggestions(true);
+    };
+
+    const handleStopChange = (text) => {
+        setStopInput(text);
+        const suggestions = filterLocations(text);
+        setStopSuggestions(suggestions);
+        setShowStopSuggestions(true);
+    };
+
+    const selectFromLocation = (location) => {
+        setFromLocation(location);
+        setFromSuggestions([]);
+        setShowFromSuggestions(false);
+        fromInputRef.current?.blur();
+    };
+
+    const selectToLocation = (location) => {
+        setToLocation(location);
+        setToSuggestions([]);
+        setShowToSuggestions(false);
+        toInputRef.current?.blur();
+    };
+
+    const selectStop = (location) => {
+        setStopInput(location);
+        setStopSuggestions([]);
+        setShowStopSuggestions(false);
+        stopInputRef.current?.blur();
+    };
+
+    const handleBlur = () => {
+        setTimeout(() => {
+            setShowFromSuggestions(false);
+            setShowToSuggestions(false);
+            setShowStopSuggestions(false);
+        }, 300);
+    };
+
+    const addStop = () => {
+        if (stopInput && locations.includes(stopInput)) {
+            if (!stops.includes(stopInput)) {
+                const newStops = [...stops, stopInput];
+                setStops(newStops);
+                setStopInput('');
+                setStopSuggestions([]);
+                setShowStopSuggestions(false);
+                // Scroll to the end of the stops list after adding
+                setTimeout(() => {
+                    stopsScrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            } else {
+                ToastAndroid.show('Stop already added', ToastAndroid.SHORT);
+            }
+        } else if (stopInput) {
+            ToastAndroid.show('Invalid location. Please select from suggestions', ToastAndroid.SHORT);
         }
-      });
-    } catch (error) {
-      console.error('Error finding route:', error);
-      setError('An error occurred while finding the route. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  // Render suggestion item with improved UI
-  const renderSuggestionItem = ({ item, onSelect }) => (
-    <TouchableOpacity
-      className="p-4 border-b border-gray-100 active:bg-gray-50"
-      onPress={() => onSelect(item)}
-      style={{ 
-        backgroundColor: 'white',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6'
-      }}
-    >
-      <View className="flex-row items-center">
-        <View className="w-10 h-10 bg-blue-50 rounded-full items-center justify-center mr-4">
-          <Ionicons name="location-outline" size={20} color="#3B82F6" />
-        </View>
-        <View>
-          <Text className="text-base font-medium text-gray-900">{item}</Text>
-          <Text className="text-sm text-gray-500">Campus Location</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+    const removeStop = (index) => {
+        const updated = [...stops];
+        updated.splice(index, 1);
+        setStops(updated);
+    };
 
-  return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={true}>
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#FCD34D', '#F59E0B']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="pt-12 pb-6 px-6 rounded-b-3xl shadow-md"
-        >
-          <Text className="text-2xl font-bold text-black mb-2">Explore Campus</Text>
-          <Text className="text-gray-700">Find the shortest route between locations</Text>
-        </LinearGradient>
+    const getCoordinatesFromLocationName = async (locationName) => {
+        if (locationCoordinates[locationName]) {
+            return locationCoordinates[locationName];
+        }
+        console.warn(`Coordinates not found for ${locationName} in local data. Using fallback.`);
+        return null;
+    };
 
-        {/* IIT Jodhpur Map Image */}
-        <View className="px-6 mt-4">
-          <View className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <Image 
-              source={require('../../assets/images/iitj-map.jpg')}
-              style={{ width: '100%', height: 200 }}
-              resizeMode="cover"
-            />
-            <View className="p-3">
-              <Text className="text-sm text-gray-500 text-center">
-                IIT Jodhpur Campus Map
-              </Text>
-            </View>
-          </View>
-        </View>
+    const calculateRoute = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            setRouteCoordinates([]);
+            setRouteInfo(null);
 
-        {/* Search Form */}
-        <View className="px-6 mt-4">
-          <View className="bg-white rounded-2xl shadow-lg p-4">
-            
-            {/* From Location */}
-            <View className="mb-4">
-              <View className="flex-row items-center mb-2">
-                <View className="w-8 h-8 bg-green-100 rounded-full items-center justify-center">
-                  <Ionicons name="location" size={16} color="#22C55E" />
-                </View>
-                <Text className="ml-2 text-gray-600">From</Text>
-              </View>
-              <View>
-                <TextInput
-                  className="bg-gray-50 p-4 rounded-xl text-base"
-                  placeholder="Enter starting point"
-                  value={fromLocation}
-                  onChangeText={handleFromLocationChange}
-                  onFocus={() => setShowFromSuggestions(true)}
-                />
-              </View>
-            </View>
+            let originCoords;
+            if (fromLocation) {
+                originCoords = await getCoordinatesFromLocationName(fromLocation);
+            } else if (userLocation) {
+                originCoords = userLocation;
+            }
 
-            {/* To Location */}
-            <View className="mb-4">
-              <View className="flex-row items-center mb-2">
-                <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center">
-                  <Ionicons name="flag" size={16} color="#EF4444" />
-                </View>
-                <Text className="ml-2 text-gray-600">To</Text>
-              </View>
-              <View>
-                <TextInput
-                  className="bg-gray-50 p-4 rounded-xl text-base"
-                  placeholder="Enter destination"
-                  value={toLocation}
-                  onChangeText={handleToLocationChange}
-                  onFocus={() => setShowToSuggestions(true)}
-                />
-              </View>
-            </View>
+            const destinationCoords = await getCoordinatesFromLocationName(toLocation);
+            const waypointCoords = await Promise.all(stops.map(getCoordinatesFromLocationName));
+            const validWaypoints = waypointCoords.filter(Boolean);
 
-            {/* Search Button */}
-            <TouchableOpacity
-              className="bg-yellow-400 py-4 rounded-xl mt-4"
-              onPress={handleSearch}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Text className="text-center font-semibold text-black text-lg">Finding Route...</Text>
-              ) : (
-                <Text className="text-center font-semibold text-black text-lg">Find Route</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+            if (!originCoords || !destinationCoords) {
+                throw new Error('Could not determine origin or destination coordinates.');
+            }
 
-        {/* Route Results */}
-        {route && (
-          <View className="px-6 mt-6 mb-6">
-            <View className="bg-white rounded-2xl shadow-lg p-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-xl font-bold text-black">Route Found</Text>
-                <TouchableOpacity
-                  className="bg-yellow-100 p-2 rounded-full"
-                  onPress={() => router.push({
-                    pathname: "/Mapscreen",
-                    params: { 
-                      destination: toLocation,
-                      userLatitude: locationCoordinates[fromLocation].latitude,
-                      userLongitude: locationCoordinates[fromLocation].longitude
+            // Create an array of all points in order: start -> stops -> destination
+            const allPoints = [originCoords, ...validWaypoints, destinationCoords];
+            const allRouteSegments = [];
+            let totalDistance = 0;
+            let totalDuration = 0;
+            const segmentInfo = [];
+
+            // Calculate route for each segment
+            for (let i = 0; i < allPoints.length - 1; i++) {
+                const startPoint = allPoints[i];
+                const endPoint = allPoints[i + 1];
+
+                const coordinates = [
+                    [startPoint.longitude, startPoint.latitude],
+                    [endPoint.longitude, endPoint.latitude]
+                ];
+
+                const formattedCoordinates = coordinates.map(coord => coord.join(',')).join(';');
+                const apiUrl = `${OSRM_BASE_URL}/${formattedCoordinates}?geometries=geojson&overview=full`;
+
+                try {
+                    const response = await axios.get(apiUrl);
+                    const data = response.data;
+
+                    if (data && data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        const segmentCoordinates = route.geometry.coordinates.map(p => ({
+                            latitude: p[1],
+                            longitude: p[0]
+                        }));
+
+                        allRouteSegments.push(segmentCoordinates);
+                        totalDistance += route.distance;
+                        totalDuration += route.duration;
+
+                        // Calculate arrival time for this segment
+                        const segmentDuration = route.duration / 60; // in minutes
+                        const segmentDistance = route.distance / 1000; // in km
+                        
+                        segmentInfo.push({
+                            from: i === 0 ? (fromLocation || 'Your Location') : stops[i - 1],
+                            to: i === allPoints.length - 2 ? toLocation : stops[i],
+                            distance: segmentDistance.toFixed(1),
+                            duration: Math.ceil(segmentDuration),
+                            arrivalTime: new Date(Date.now() + totalDuration * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        });
+                    } else {
+                        throw new Error(`No walkable route found between points ${i} and ${i + 1}.`);
                     }
-                  })}
-                >
-                  <Ionicons 
-                    name="map" 
-                    size={24} 
-                    color="#F59E0B" 
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              <View className="flex-row justify-between mb-4">
-                <View>
-                  <Text className="text-gray-600">Total Distance</Text>
-                  <Text className="text-lg font-semibold">{route.distance.toFixed(1)} km</Text>
-                </View>
-                <View>
-                  <Text className="text-gray-600">Estimated Time</Text>
-                  <Text className="text-lg font-semibold">{route.time} minutes</Text>
-                </View>
-              </View>
-              
-              <Text className="text-gray-600 mb-2">Route Steps:</Text>
-              <View className="bg-gray-50 p-3 rounded-xl">
-                {route.steps.map((step, index) => (
-                  <View key={index} className="mb-3">
-                    <View className="flex-row items-center mb-1">
-                      <View className="w-6 h-6 rounded-full bg-yellow-400 items-center justify-center mr-2">
-                        <Text className="text-xs font-bold">{index + 1}</Text>
-                      </View>
-                      <Text className="text-black flex-1" numberOfLines={2}>
-                        {step.instruction.replace(/<[^>]*>/g, '')}
-                      </Text>
-                    </View>
-                    <View className="flex-row justify-between ml-8">
-                      <Text className="text-sm text-gray-500">{step.distance}</Text>
-                      <Text className="text-sm text-gray-500">{step.duration}</Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-          </View>
-        )}
+                } catch (error) {
+                    console.error(`Error calculating segment ${i}:`, error);
+                    throw new Error(`Failed to calculate route segment: ${error.message}`);
+                }
+            }
 
-        {/* Google Earth View */}
-        {route && showGoogleEarth && (
-          <View className="px-6 mb-6">
-            <View className="bg-white rounded-2xl shadow-lg overflow-hidden" style={{ height: 300 }}>
-              <WebView
-                source={{ html: generateGoogleEarthHTML() }}
-                style={{ flex: 1 }}
-                onError={(syntheticEvent) => {
-                  const { nativeEvent } = syntheticEvent;
-                  setError('WebView error: ' + nativeEvent.description);
-                }}
-                javaScriptEnabled={true}
-                domStorageEnabled={true}
-                startInLoadingState={true}
-                scalesPageToFit={true}
-                renderLoading={() => (
-                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#F59E0B" />
-                  </View>
+            // Combine all route segments
+            const combinedRoute = allRouteSegments.flat();
+            setRouteCoordinates(combinedRoute);
+
+            setRouteInfo({
+                distance: (totalDistance / 1000).toFixed(1), // Convert to km
+                time: Math.ceil(totalDuration / 60), // Convert to minutes
+                stops: stops.length,
+                segments: segmentInfo,
+                totalDuration: totalDuration,
+                startTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                estimatedArrival: new Date(Date.now() + totalDuration * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            // Fit the map to show the entire route
+            if (combinedRoute.length > 0 && mapRef.current) {
+                const edgePadding = { top: 50, right: 50, bottom: 200, left: 50 };
+                mapRef.current.fitToCoordinates(combinedRoute, { edgePadding });
+            }
+
+        } catch (error) {
+            console.error('Error calculating route:', error);
+            setError(error.message || 'Could not calculate route');
+            ToastAndroid.show(error.message || 'Could not calculate route', ToastAndroid.SHORT);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const toggleMapType = () => {
+        setMapType(mapType === 'standard' ? 'satellite' : 'standard');
+    };
+
+    const toggleControls = () => {
+        setShowControls(!showControls);
+    };
+
+    const toggleRouteInfo = () => {
+        setShowRouteInfo(!showRouteInfo);
+    };
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.searchContainer}>
+                <View style={styles.inputContainer}>
+                    <Ionicons name="location" size={20} color="#666" />
+                    <TextInput
+                        ref={fromInputRef}
+                        style={styles.input}
+                        placeholder="From"
+                        value={fromLocation}
+                        onChangeText={handleFromLocationChange}
+                        onBlur={handleBlur}
+                        onFocus={() => setShowFromSuggestions(fromLocation.length > 0 && filterLocations(fromLocation).length > 0)}
+                    />
+                    {showFromSuggestions && fromSuggestions.length > 0 && (
+                        <ScrollView style={styles.suggestionsContainer}>
+                            {fromSuggestions.map((location, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.suggestionItem}
+                                    onPress={() => selectFromLocation(location)}
+                                    activeOpacity={1}>
+                                    <Text style={styles.suggestionText}>{location}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+
+                <View style={styles.inputContainer}>
+                    <Ionicons name="flag" size={20} color="#666" />
+                    <TextInput
+                        ref={toInputRef}
+                        style={styles.input}
+                        placeholder="To"
+                        value={toLocation}
+                        onChangeText={handleToLocationChange}
+                        onBlur={handleBlur}
+                        onFocus={() => setShowToSuggestions(toLocation.length > 0 && filterLocations(toLocation).length > 0)}
+                    />
+                    {showToSuggestions && toSuggestions.length > 0 && (
+                        <ScrollView style={styles.suggestionsContainer}>
+                            {toSuggestions.map((location, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.suggestionItem}
+                                    onPress={() => selectToLocation(location)}
+                                    activeOpacity={1}>
+                                    <Text style={styles.suggestionText}>{location}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+
+                <View style={styles.stopsInputContainer}>
+                    <View style={styles.inputRow}>
+                        <View style={styles.inputWithIcon}>
+                            <Ionicons name="location-outline" size={20} color="#666" />
+                            <TextInput
+                                ref={stopInputRef}
+                                style={styles.stopInput}
+                                placeholder="Add Stop"
+                                value={stopInput}
+                                onChangeText={(text) => {
+                                    setStopInput(text);
+                                    setShowStopSuggestions(text.length > 0 && filterLocations(text).length > 0);
+                                    setStopSuggestions(filterLocations(text));
+                                }}
+                                onBlur={handleBlur}
+                                onFocus={() => setShowStopSuggestions(stopInput.length > 0 && filterLocations(stopInput).length > 0)}
+                            />
+                        </View>
+                        <TouchableOpacity
+                            style={styles.addButton}
+                            onPress={addStop}>
+                            <Ionicons name="add" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {showStopSuggestions && stopSuggestions.length > 0 && (
+                        <ScrollView style={styles.suggestionsContainer}>
+                            {stopSuggestions.map((location, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.suggestionItem}
+                                    onPress={() => selectStop(location)}
+                                    activeOpacity={1}>
+                                    <Text style={styles.suggestionText}>{location}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+
+                {/* Display Added Stops */}
+                {stops.length > 0 && (
+                    <View style={styles.stopsListContainer}>
+                        <ScrollView ref={stopsScrollViewRef} horizontal={true} contentContainerStyle={styles.stopsListContent}>
+                            {stops.map((stop, index) => (
+                                <View key={index} style={styles.stopItem}>
+                                    <Text style={styles.stopText}>{stop}</Text>
+                                    <TouchableOpacity onPress={() => removeStop(index)}>
+                                        <Ionicons name="close-circle" size={20} color="#666" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
                 )}
-              />
+
+                <TouchableOpacity
+                    style={styles.searchButton}
+                    onPress={calculateRoute}
+                    disabled={(!fromLocation && !userLocation) || !toLocation || isLoading}>
+                    <Text style={styles.searchButtonText}>
+                        {isLoading ? 'Calculating...' : 'Search Route'}
+                    </Text>
+                </TouchableOpacity>
             </View>
-          </View>
-        )}
 
-        {/* Error Message */}
-        {error && (
-          <View className="px-6 mb-6">
-            <View className="bg-red-50 p-4 rounded-xl">
-              <Text className="text-red-600">{error}</Text>
-            </View>
-          </View>
-        )}
+            <MapView
+                ref={mapRef}
+                style={styles.map}
+                mapType={mapType}
+                showsUserLocation={true}
+                showsMyLocationButton={true}
+                showsCompass={true}
+                showsScale={true}
+                onPress={toggleControls}
+            >
+                {routeCoordinates.length > 0 && (
+                    <Polyline
+                        coordinates={routeCoordinates}
+                        strokeWidth={4}
+                        strokeColor="#F59E0B"
+                    />
+                )}
 
-        {/* Available Locations */}
-        <View className="px-6 mb-8">
-          <Text className="text-xl font-semibold text-slate-900 mb-4">Available Locations</Text>
-          <View className="bg-gray-50 p-3 rounded-xl">
-            <Text className="text-gray-600">
-              {Object.keys(campusGraph).join(', ')}
-            </Text>
-          </View>
+                {fromLocation && locationCoordinates[fromLocation] && (
+                    <Marker
+                        coordinate={{
+                            latitude: locationCoordinates[fromLocation].latitude,
+                            longitude: locationCoordinates[fromLocation].longitude,
+                        }}
+                        title="Start"
+                        description={fromLocation}
+                    >
+                        <View style={styles.markerContainer}>
+                            <Ionicons name="location" size={24} color="#22C55E" />
+                        </View>
+                    </Marker>
+                )}
+                {userLocation && !fromLocation && (
+                    <Marker
+                        coordinate={userLocation}
+                        title="Your Location"
+                        pinColor="#22C55E"
+                    />
+                )}
+
+                {stops.map((stop, index) => (
+                    <Marker
+                        key={`stop-${index}`}
+                        coordinate={{
+                            latitude: locationCoordinates[stop].latitude,
+                            longitude: locationCoordinates[stop].longitude,
+                        }}
+                        title={`Stop ${index + 1}`}
+                        description={stop}
+                    >
+                        <View style={styles.markerContainer}>
+                            <Ionicons name="location" size={24} color="#3B82F6" />
+                            <Text style={styles.stopNumber}>{index + 1}</Text>
+                        </View>
+                    </Marker>
+                ))}
+
+                {toLocation && locationCoordinates[toLocation] && (
+                    <Marker
+                        coordinate={{
+                            latitude: locationCoordinates[toLocation].latitude,
+                            longitude: locationCoordinates[toLocation].longitude,
+                        }}
+                        title="Destination"
+                        description={toLocation}
+                    >
+                        <View style={styles.markerContainer}>
+                            <Ionicons name="flag" size={24} color="#EF4444" />
+                        </View>
+                    </Marker>
+                )}
+            </MapView>
+
+            {isLoading && (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#F59E0B" />
+                    <Text style={styles.loadingText}>Calculating route...</Text>
+                </View>
+            )}
+
+            {error && (
+                <View style={styles.errorText}>
+                    <Text>{error}</Text>
+                </View>
+            )}
+
+            {routeInfo && (
+                <View style={styles.controls}>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={toggleMapType}>
+                        <Ionicons
+                            name={mapType === 'standard' ? 'earth' : 'map'}
+                            size={24}
+                            color="#F59E0B"
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.controlButton}
+                        onPress={toggleRouteInfo}>
+                        <Ionicons
+                            name={showRouteInfo ? 'information-circle' : 'information-circle-outline'}
+                            size={24}
+                            color="#F59E0B"
+                        />
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {routeInfo && showRouteInfo && (
+                <View style={styles.infoPanel}>
+                    <View style={styles.infoHeader}>
+                        <Text style={styles.infoTitle}>Route Information</Text>
+                        <View style={styles.timeInfo}>
+                            <Text style={styles.timeLabel}>Start: {routeInfo.startTime}</Text>
+                            <Text style={styles.timeLabel}>Arrival: {routeInfo.estimatedArrival}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="walk" size={24} color="#F59E0B" />
+                            <Text style={styles.infoLabel}>Total Distance</Text>
+                            <Text style={styles.infoValue}>{routeInfo.distance} km</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="time" size={24} color="#F59E0B" />
+                            <Text style={styles.infoLabel}>Total Time</Text>
+                            <Text style={styles.infoValue}>{routeInfo.time} min</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Ionicons name="location" size={24} color="#F59E0B" />
+                            <Text style={styles.infoLabel}>Stops</Text>
+                            <Text style={styles.infoValue}>{routeInfo.stops}</Text>
+                        </View>
+                    </View>
+
+                    <ScrollView style={styles.segmentsContainer}>
+                        {routeInfo.segments.map((segment, index) => (
+                            <View key={index} style={styles.segmentItem}>
+                                <View style={styles.segmentHeader}>
+                                    <Text style={styles.segmentTitle}>Stop {index + 1}</Text>
+                                    <Text style={styles.segmentTime}>Arrival: {segment.arrivalTime}</Text>
+                                </View>
+                                <View style={styles.segmentDetails}>
+                                    <Text style={styles.segmentRoute}>{segment.from} → {segment.to}</Text>
+                                    <View style={styles.segmentMetrics}>
+                                        <Text style={styles.segmentMetric}>{segment.distance} km</Text>
+                                        <Text style={styles.segmentMetric}>{segment.duration} min</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
         </View>
-        
-        {/* Add extra padding at the bottom for better scrolling experience */}
-        <View style={{ height: 50 }} />
-      </ScrollView>
-
-      {/* From Location Suggestions - Positioned absolutely */}
-      {showFromSuggestions && fromSuggestions.length > 0 && (
-        <View 
-          style={{ 
-            position: 'absolute',
-            top: 220,
-            left: 24,
-            right: 24,
-            backgroundColor: 'white',
-            borderRadius: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 5,
-            maxHeight: 200,
-            zIndex: 1000
-          }}
-        >
-          <FlatList
-            data={fromSuggestions}
-            renderItem={({ item }) => renderSuggestionItem({ item, onSelect: selectFromLocation })}
-            keyExtractor={(item) => item}
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={true}
-            style={{ maxHeight: 200 }}
-            scrollEnabled={true}
-          />
-        </View>
-      )}
-
-      {/* To Location Suggestions - Positioned absolutely */}
-      {showToSuggestions && toSuggestions.length > 0 && (
-        <View 
-          style={{ 
-            position: 'absolute',
-            top: 320,
-            left: 24,
-            right: 24,
-            backgroundColor: 'white',
-            borderRadius: 12,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 5,
-            maxHeight: 200,
-            zIndex: 1000
-          }}
-        >
-          <FlatList
-            data={toSuggestions}
-            renderItem={({ item }) => renderSuggestionItem({ item, onSelect: selectToLocation })}
-            keyExtractor={(item) => item}
-            nestedScrollEnabled={true}
-            showsVerticalScrollIndicator={true}
-            style={{ maxHeight: 200 }}
-            scrollEnabled={true}
-          />
-        </View>
-      )}
-    </SafeAreaView>
-  );
+    );
 };
 
-export default SearchScreen;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingTop: 20,
+    },
+    searchContainer: {
+        padding: 15,
+        backgroundColor: 'white',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 10,
+        position: 'relative',
+    },
+    inputWithIcon: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    input: {
+        flex: 1,
+        marginLeft: 10,
+        fontSize: 16,
+    },
+    stopInput: {
+        flex: 1,
+        marginLeft: 10,
+        fontSize: 16,
+    },
+    suggestionsContainer: {
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        marginTop: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        zIndex: 2,
+        maxHeight: 200,
+    },
+    suggestionItem: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    suggestionText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    stopsInputContainer: {
+        marginBottom: 10,
+    },
+    inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    addButton: {
+        backgroundColor: '#007AFF',
+        padding: 10,
+        borderRadius: 50,
+        marginLeft: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    stopsListContainer: {
+        marginTop: 10,
+        height: 40, // Adjust height as needed
+    },
+    stopsListContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    stopItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        padding: 10,
+        borderRadius: 8,
+        marginRight: 5,
+    },
+    stopText: {
+        fontSize: 16,
+    },
+    searchButton: {
+        backgroundColor: '#F59E0B',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    searchButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    map: {
+        flex: 1,
+    },
+    loadingContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#666',
+    },
+    errorContainer: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        right: 20,
+        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+        padding: 10,
+        borderRadius: 8,
+    },
+    errorText: {
+        color: 'white',
+        textAlign: 'center',
+    },
+    infoPanel: {
+        position: 'absolute',
+        bottom: 100,
+        left: 20,
+        right: 20,
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+        maxHeight: '50%',
+        zIndex: 1,
+    },
+    infoHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    infoTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    timeInfo: {
+        alignItems: 'flex-end',
+    },
+    timeLabel: {
+        fontSize: 12,
+        color: '#666',
+    },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    infoItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    infoLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
+    },
+    infoValue: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginTop: 2,
+    },
+    controls: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        flexDirection: 'column',
+        gap: 10,
+    },
+    controlButton: {
+        backgroundColor: 'white',
+        padding: 10,
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    markerContainer: {
+        backgroundColor: 'white',
+        padding: 4,
+        borderRadius: 20,
+        borderWidth: 2,
+        borderColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    stopNumber: {
+        position: 'absolute',
+        top: 2,
+        right: 2,
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: 'white',
+        backgroundColor: '#3B82F6',
+        padding: 2,
+        borderRadius: 8,
+        minWidth: 16,
+        textAlign: 'center',
+    },
+    segmentsContainer: {
+        marginTop: 10,
+        maxHeight: 200,
+    },
+    segmentItem: {
+        backgroundColor: '#f8f8f8',
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 8,
+        marginRight: 5,
+    },
+    segmentHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    segmentTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    segmentTime: {
+        fontSize: 12,
+        color: '#666',
+    },
+    segmentDetails: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+    segmentRoute: {
+        fontSize: 12,
+        color: '#666',
+        flex: 1,
+        marginRight: 10,
+    },
+    segmentMetrics: {
+        flexDirection: 'row',
+        gap: 10,
+        marginTop: 5,
+    },
+    segmentMetric: {
+        fontSize: 12,
+        color: '#666',
+        backgroundColor: '#f0f0f0',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+    },
+});
+
+export default Search;

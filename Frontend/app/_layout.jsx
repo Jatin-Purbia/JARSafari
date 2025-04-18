@@ -56,7 +56,29 @@ export default function Layout() {
         name="about"
         options={{
           headerShown: false,
+          presentation: 'fullScreenModal',
         }}
+      />
+      <Stack.Screen
+        name="contact"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="privacy"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen
+        name="ComingSoon"
+        options={{
+          headerShown: false,
+          presentation: 'fullScreenModal',
+        }}  
       />
     </Stack>
 

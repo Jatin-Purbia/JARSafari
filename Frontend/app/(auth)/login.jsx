@@ -15,7 +15,6 @@ import { Link, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { useDispatch, useSelector } from "react-redux";
 import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {

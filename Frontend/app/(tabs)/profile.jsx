@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 
 export default function Profile() {
   const router = useRouter();
-  const user = global?.userInfo;
-  const favorites = global?.favorites || [];
-  const [showAllFavorites, setShowAllFavorites] = useState(false);
+  const user = global?.userInfo || {
+    name: "Jatin Purbia",
+    hostel: "Ganga Bhawan",
+    // joined: "2023-07-15"
+  };
 
   const getInitial = (name) => {
     return name && name.length > 0 ? name.charAt(0).toUpperCase() : '?';
@@ -28,86 +30,44 @@ export default function Profile() {
   const initial = getInitial(user?.name);
   const avatarColor = getColorForInitial(initial);
 
-  const toggleViewAll = () => {
-    setShowAllFavorites(!showAllFavorites);
-  };
-
-  const favoritesToDisplay = showAllFavorites ? favorites : favorites.slice(0, 3);
-
   return (
     <SafeAreaView className="flex-1 bg-white px-6">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <View className="py-10 items-center">
-          <Text className="text-4xl font-extrabold text-blue-500 mb-8">My Profile</Text>
+          <Text className="text-4xl font-extrabold text-blue-500 mb-6">My Profile</Text>
 
-          {/* Dynamic Avatar Circle */}
-          <View style={{ backgroundColor: avatarColor }} className="w-24 h-24 rounded-full justify-center items-center mb-6 shadow-lg">
+          {/* Avatar */}
+          <View style={{ backgroundColor: avatarColor }} className="w-24 h-24 rounded-full justify-center items-center mb-4 shadow-lg">
             <Text className="text-white text-3xl font-bold">{initial}</Text>
           </View>
 
-          {/* Info Card */}
-          <View className="bg-white p-6 rounded-2xl w-full shadow-md border border-gray-100 mb-8">
-            {user ? (
-              <>
-                <ProfileField label="Full Name" value={user.name} />
-                <ProfileField label="Hostel" value={user.hostel} />
-              </>
-            ) : (
-              <Text className="text-center text-gray-400">
-                No user information available
-              </Text>
-            )}
+          {/* Name + Hostel */}
+          <View className="bg-white p-6 rounded-2xl w-full shadow-md border border-gray-100 mb-6">
+            <ProfileField label="Full Name" value={user.name} />
+            <ProfileField label="Hostel" value={user.hostel} />
           </View>
 
-          {/* Favorites Bar */}
-          <View className="bg-white p-6 rounded-2xl w-full shadow-md border border-gray-100 mb-8">
-            <Text className="text-lg font-semibold text-gray-800 mb-4">Your Favorites</Text>
-            {favoritesToDisplay.length > 0 ? (
-              <View className="flex-row flex-wrap">
-                {favoritesToDisplay.map((fav) => (
-                  <View
-                    key={fav}
-                    className="bg-blue-100 p-2 rounded-full mr-2 mb-2"
-                  >
-                    <Text className="text-blue-700">{fav}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text className="text-center text-gray-400">No favorites selected</Text>
-            )}
+          {/* Action Buttons */}
+            <View
+              className="w-full bg-white p-4 shadow-md mb-6"
+              style={{
+                borderWidth: 1,
+                borderColor: '#e5e7eb', // Tailwind's gray-200
+                borderRadius: 10,
+                gap: 12
+              }}
+            >
+              <CustomButton title="Edit Profile" onPress={() => router.push('/user-info')} />
+              <CustomButton title="About Us" onPress={() => router.push('/about')} />
+              <CustomButton title="Contact Us" onPress={() => router.push('/contact')} />
+            </View>
 
-            {/* View All Button */}
-            {favorites.length > 3 && (
-              <TouchableOpacity
-                className="bg-blue-500 p-3 rounded-2xl mt-4"
-                onPress={toggleViewAll}
-              >
-                <Text className="text-white text-center font-semibold text-lg">
-                  {showAllFavorites ? 'View Less' : 'View All'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* About Us Button */}
-          <TouchableOpacity
-           className="bg-yellow-400 p-4 px-6 rounded-2xl shadow-md w-full mb-4 active:opacity-80"
-           onPress={() => router.push('/about')}
-          >
-          <Text className="text-black text-center font-semibold text-lg tracking-wide">
-           About Us
-          </Text>
-          </TouchableOpacity>
-          {/* Edit Button */}
-          <TouchableOpacity
-            className="bg-yellow-400 p-4 px-6 rounded-2xl shadow-md w-full active:opacity-80"
-            onPress={() => router.push('/user-info')}
-          >
-            <Text className="text-black text-center font-semibold text-lg tracking-wide">
-              Edit Profile
+          {/* Inspirational Quote */}
+          <View className="bg-blue-50 w-full p-4 rounded-xl border border-blue-100 shadow-sm">
+            <Text className="text-center italic text-gray-600">
+              “Small steps in the right direction can turn out to be the biggest step of your life.”
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -120,3 +80,15 @@ const ProfileField = ({ label, value }) => (
     <Text className="text-lg font-semibold text-gray-800 mt-1">{value || 'N/A'}</Text>
   </View>
 );
+
+const CustomButton = ({ title, onPress }) => (
+  <TouchableOpacity
+  className="py-4 px-2 rounded-2xl shadow w-full active:opacity-90 border bg-slate-200 border-black"
+  onPress={onPress}
+  >
+    <Text className="text-black text-left font-semibold text-lg tracking-wide">
+      {title}
+    </Text>
+  </TouchableOpacity>
+);
+
