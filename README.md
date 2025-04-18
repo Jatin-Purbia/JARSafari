@@ -30,14 +30,15 @@
 ## 📱 App Screenshots
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-  <img src="assets/app_view/home.jpg" alt="Home Screen" width="200"/>
-  <img src="assets/app_view/gps.jpg" alt="GPS Navigation" width="200"/>
-  <img src="assets/app_view/favorites.jpg" alt="Favorites" width="200"/>
-  <img src="assets/app_view/stops.jpg" alt="Multi-Stop Planning" width="200"/>
-  <img src="assets/app_view/autorec.jpg" alt="Autocomplete Search" width="200"/>
-  <img src="assets/app_view/info.jpg" alt="Location Info" width="200"/>
-  <img src="assets/app_view/flanding.jpg" alt="First Landing" width="200"/>
+  <img src="../Frontend/assets/app_view/home.jpg" alt="Home Screen" width="200"/>
+  <img src="../Frontend/assets/app_view/info.jpg" alt="GPS Navigation" width="200"/>
+  <img src="../Frontend/assets/app_view/favorites.jpg" alt="Favorites" width="200"/>
+  <img src="../Frontend/assets/app_view/flanding.jpg" alt="Multi-Stop Planning" width="200"/>
+  <img src="../Frontend/assets/app_view/gps.jpg" alt="Autocomplete Search" width="200"/>
+  <img src="../Frontend/assets/app_view/autorec.jpg" alt="First Landing" width="200"/>
+  <img src="../Frontend/assets/app_view/stops.jpg" alt="Location Info" width="200"/>
 </div>
+
 
 ---
 
